@@ -7,7 +7,7 @@ const omelette = require('omelette');
 const wrap = require('wordwrap')(80);
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 
-const agents = ['ie', 'edge', 'firefox', 'chrome', 'safari', 'opera', 'ios_saf', 'op_mini', 'android', 'and_chr'];
+const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
 const defaultItemWidth = 6;
 const eras = [-3, -2, -1, 0, 1, 2, 3];
 
