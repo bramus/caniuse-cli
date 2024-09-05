@@ -90,14 +90,20 @@ const printTableHeader = function printTableHeader() {
  * printTableRowItem prints `caniuse` table row column
  */
 const printTableRowItem = function printTableRowItem(agent, version, dataItem) {
-  const text = padCenter(version, columnWidths[agent], ' ');
+  let toPrint = version;
+  
+  // Support is indicated by the first character of 
+  const supportCodes = dataItem.split(' ');
+  const isSupported = supportCodes[0];
+  
+  const notes = supportCodes.filter(s => s.startsWith('#'));
+  if (notes.length) {
+    toPrint += ` [${notes.map(s => s.substr(1)).join(',')}]`;
+  }
 
-  // Support is indicated by the first character of the string,
-  // It can hold more than 1 value.
-  const supportCharacter = dataItem[0].substr(0, 1);
+  const text = padCenter(toPrint, columnWidths[agent], ' ');
 
-  // @TODO: Print notes next to version number
-  switch (supportCharacter) {
+  switch (isSupported) {
     case 'y': // (Y)es, supported by default
       process.stdout.write(clc.white.bgGreen(text));
       return;
