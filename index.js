@@ -128,7 +128,7 @@ const printTableRow = function printTableRow(item, era) {
       printTableRowItem(agent, version, dataItem);
     } else {
       // space between items
-      process.stdout.write(padCenter('', 6, ' '));
+      process.stdout.write(padCenter('', columnWidths[agent], ' '));
     }
 
     if (index < agents.length - 1) {
