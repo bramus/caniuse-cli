@@ -89,12 +89,28 @@ const printTableHeader = function printTableHeader() {
 const printTableRowItem = function printTableRowItem(agent, version, dataItem) {
   const text = padCenter(version, columnWidths[agent], ' ');
 
-  if (dataItem[0] === 'y') {
-    process.stdout.write(clc.white.bgGreen(text));
-  } else if (dataItem[0] === 'p') {
-    process.stdout.write(clc.white.bgYellow(text));
-  } else {
-    process.stdout.write(clc.white.bgRed(text));
+  // Support is indicated by the first character of the string,
+  // It can hold more than 1 value.
+  const supportCharacter = dataItem[0].substr(0, 1);
+
+  // @TODO: Check for those with prefix … most like those are "n x"
+  // @TODO: Keep track of the notes to print
+  switch (supportCharacter) {
+    case 'y': // (Y)es, supported by default
+      process.stdout.write(clc.white.bgGreen(text));
+      return;
+    case 'a': // (A)lmost supported (aka Partial support)
+      process.stdout.write(clc.white.bgYellow(text));
+      return;
+    case 'u': // Support (u)nknown
+      process.stdout.write(clc.white.bgXterm(240)(text));
+      return;
+    case 'p': // No support, but has (P)olyfill
+    case 'n': // (N)o support, or disabled by default
+    case 'x': // Requires prefi(x) to work
+    case 'd': // (D)isabled by default (need to enable flag or something)
+    default:
+      process.stdout.write(clc.white.bgRed(text));
   }
 };
 
