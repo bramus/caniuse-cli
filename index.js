@@ -9,6 +9,9 @@ const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 
 const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
 const defaultItemWidth = 6;
+
+// @TODO: Rework eras logic so that versions with the same level of support are grouped
+// e.g. https://caniuse.com/css-container-queries-style has versions 107-110 collapsed for Chrome,
 const eras = [-3, -2, -1, 0, 1, 2, 3];
 
 /**
