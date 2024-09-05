@@ -96,8 +96,7 @@ const printTableRowItem = function printTableRowItem(agent, version, dataItem) {
   // It can hold more than 1 value.
   const supportCharacter = dataItem[0].substr(0, 1);
 
-  // @TODO: Check for those with prefix … most like those are "n x"
-  // @TODO: Keep track of the notes to print
+  // @TODO: Print notes next to version number
   switch (supportCharacter) {
     case 'y': // (Y)es, supported by default
       process.stdout.write(clc.white.bgGreen(text));
@@ -158,6 +157,16 @@ const printItem = function printItem(item) {
   if (item.notes) {
     console.log();
     console.log(wrap(`Notes: ${item.notes}`));
+  }
+  // @TODO: Only print the notes that were printed in tablerows
+  if (item.notes_by_num) {
+    console.log();
+    console.log(`Notes by number:`);
+    console.log();
+    Object.entries(item.notes_by_num).forEach(([num, note]) => {
+      console.log(wrap(`[${num}] ${note}`));
+    });
+    console.log();
   }
 };
 
