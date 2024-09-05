@@ -1,6 +1,6 @@
 {
   "name": "caniuse-cli",
-  "version": "1.0.30000979",
+  "version": "1.0.30001657",
   "description": "Comman line tool for Caniuse database",
   "keywords": [
     "support",
@@ -21,7 +21,7 @@
   "author": "David Senkus",
   "license": "ISC",
   "dependencies": {
-    "caniuse-db": "^1.0.30000979",
+    "caniuse-db": "^1.0.30001657",
     "cli-color": "^1.2.0",
     "omelette": "^0.4.5",
     "wordwrap": "^1.0.0"
