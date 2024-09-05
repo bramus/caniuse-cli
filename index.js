@@ -8,47 +8,21 @@ const wrap = require('wordwrap')(80);
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 
 const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
-const defaultItemWidth = 8;
+const defaultItemWidth = 12;
 
-// @TODO: Rework eras logic so that versions with the same level of support are grouped
-// e.g. https://caniuse.com/css-container-queries-style has versions 107-110 collapsed for Chrome,
-const eras = [-3, -2, -1, 0, 1, 2, 3];
+// @TODO: reinstate these …
+const columnWidths = {};
 
 /**
- * getAgentVersion() returns agent version at specified era
+ * getCurrentAgentVersion() returns the current agent version
  */
-const getAgentVersion = function getAgentVersion(agent, era) {
+const getCurrentAgentVersion = function getCurrentAgentVersion(agent) {
   try {
-    return caniuse.agents[agent]
-      .version_list.find(item => item.era === era).version;
+    return caniuse.agents[agent].current_version;
   } catch (error) {
     return undefined;
   }
 };
-
-/**
- * columnWidths contains max column width for each agent
- */
-const columnWidths = agents.reduce((collection, agent) => {
-  const agentAbbr = caniuse.agents[agent].browser;
-  const agentHeaderWidth = agentAbbr.length > defaultItemWidth
-    ? agentAbbr.length : defaultItemWidth;
-
-  // calculate max required width for agent
-  const maxWidth = eras.reduce((max, era) => {
-    try {
-      const width = getAgentVersion(agent, era).length;
-      return width > max ? width : max;
-    } catch (error) {
-      return max;
-    }
-  });
-
-  return {
-    ...collection,
-    [agent]: maxWidth > agentHeaderWidth ? maxWidth : agentHeaderWidth,
-  };
-}, {});
 
 /**
  * strRepeat() returns string str repeater qty times
@@ -65,7 +39,7 @@ const strRepeat = function strRepeat(str, qty) {
  * padCenter() returns fixed length string,
  * padding with padStr from both sides if necessary
  */
-const padCenter = function padCenter(str, length, padStr) {
+const padCenter = function padCenter(str, length = defaultItemWidth, padStr) {
   const padLen = length - str.length;
 
   return strRepeat(padStr, Math.ceil(padLen / 2))
@@ -89,11 +63,11 @@ const printTableHeader = function printTableHeader() {
 /**
  * printTableRowItem prints `caniuse` table row column
  */
-const printTableRowItem = function printTableRowItem(agent, version, dataItem) {
-  let toPrint = version;
+const printTableRowItem = function printTableRowItem(agent, versionString, stat) {
+  let toPrint = versionString;
   
-  // Support is indicated by the first character of 
-  const supportCodes = dataItem.split(' ');
+  // Support is indicated by the first character of
+  const supportCodes = stat.split(' ');
   const isSupported = supportCodes[0];
   
   const notes = supportCodes.filter(s => s.startsWith('#'));
@@ -125,20 +99,20 @@ const printTableRowItem = function printTableRowItem(agent, version, dataItem) {
 /**
  *  printTableRow prints `caniuse` trable row
  */
-const printTableRow = function printTableRow(item, era) {
-  agents.forEach((agent, index) => {
-    const version = getAgentVersion(agent, era);
+const printTableRow = function printTableRow(stats, index) {
+  agents.forEach((agent, i) => {
+    let dataItem = stats[agent][index];
 
-    if (version !== undefined) {
-      const dataItem = item.stats[agent][version];
-      printTableRowItem(agent, version, dataItem);
+    if (dataItem !== null) {
+      printTableRowItem(agent, dataItem.versionString, dataItem.stat);
     } else {
-      // space between items
+      // Fill up cell with whitespace
       process.stdout.write(padCenter('', columnWidths[agent], ' '));
     }
 
-    if (index < agents.length - 1) {
-      if (era === 0) {
+    // Space between the cells
+    if (i < agents.length - 1) {
+      if (dataItem && dataItem.currentVersion) {
         process.stdout.write(clc.bgBlackBright(' '));
       } else {
         process.stdout.write(' ');
@@ -149,17 +123,131 @@ const printTableRow = function printTableRow(item, era) {
   process.stdout.write('\n');
 };
 
+const flattenStats = function flattenStats(stats) {
+
+  const newStats = {};
+  const agentPositions = {};
+
+  agents.forEach(agent => {
+    // Get original stats
+    // @TODO: handle “all”
+    const agentStats = stats[agent];
+
+    // Get current agent version
+    const currentVersion = getCurrentAgentVersion(agent);
+
+    // Keep track of how many stats we added before the current version,
+    // after the current version, and where the current version is in the reworked
+    // set. We use these numbers to align the tables so that there is one row with
+    // all the current versions
+    let numBeforeCurrent = 0;
+    let numAfterCurrent = 0;
+    let indexOfCurrent = null;
+
+    // Create groups of support
+    // [
+    //  { stat: 'n', versions: [1,2,3] },
+    //  { stat: 'n #1', versions: [4,5,6] },
+    //  { stat: 'a #2', versions: [7] },
+    //  { stat: 'y', versions: [8,9,10,11,12] },
+    //  { stat: 'y', versions: [13] }, <-- Current Version
+    //  { stat: 'y', versions: [14,15,TP] }
+    // ]
+    const groupedStats = [];
+    let prevStat = null;
+    // @TODO: These don’t retain order … so you’re basically screwed
+    for (version_list_entry of caniuse.agents[agent].version_list) {
+      const version = version_list_entry.version;
+      const stat = agentStats[version];
+
+      const isCurrentVersion = version == currentVersion;
+      if (stat != prevStat || isCurrentVersion) {
+        groupedStats.push({
+          stat,
+          versions: [version],
+          currentVersion: isCurrentVersion,
+        });
+
+        if (isCurrentVersion) {
+          indexOfCurrent = groupedStats.length - 1;
+        } else { 
+          if (indexOfCurrent === null) {
+            numBeforeCurrent++;
+          } else {
+            numAfterCurrent++;
+          }
+        }
+      } else {
+        groupedStats[groupedStats.length-1].versions.push(version);
+      }
+
+      // Store prevStat. Set it to null when isCurrentVersion
+      // to make sure the currentVersion has its own entry
+      prevStat = isCurrentVersion ? null : stat;
+    }
+
+    // Flatten the versions
+    // E.g.  [1,2,3] --> '1-3'
+    for (let entry of groupedStats) {
+      const { versions } = entry;
+      let versionString = '';
+      if (versions.length == 1) {
+        versionString = versions[0];
+      } else {
+        const firstVersion = versions[0].split('-')[0];
+        const lastVersion = versions[versions.length-1].includes('-') ? versions[versions.length-1].split('-')[1] : versions[versions.length-1];
+        versionString = `${firstVersion}-${lastVersion}`;
+      }
+      entry.versionString = versionString;
+    }
+
+    newStats[agent] = groupedStats;
+    agentPositions[agent] = {
+      numBeforeCurrent,
+      indexOfCurrent,
+      numAfterCurrent,
+    };
+  });
+
+  // Pad the data per agent, so that each agent has the same amount of entries before and after the current
+  // (thereby making the indexOfCurrent the same for all agents)
+  const maxNumBeforeCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numBeforeCurrent));
+  const maxNumAfterCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numAfterCurrent));
+
+  agents.forEach(agent => {
+    if (agentPositions[agent].numBeforeCurrent < maxNumBeforeCurrent) {
+      for (let i = 0; i < maxNumBeforeCurrent - agentPositions[agent].numBeforeCurrent; i++) {
+        newStats[agent].unshift(null);
+      }
+    }
+    if (agentPositions[agent].numAfterCurrent < maxNumAfterCurrent) {
+      for (let i = 0; i < maxNumAfterCurrent - agentPositions[agent].numAfterCurrent; i++) {
+        newStats[agent].push(null);
+      }
+    }
+  });
+
+  return {
+    data: newStats,
+    numRows: maxNumBeforeCurrent + maxNumAfterCurrent,
+  };
+}
+
+
 /**
  * printItem() prints `caniuse` results for specified item
  */
 const printItem = function printItem(item) {
+  item.stats = flattenStats(item.stats);
   console.log(clc.bold(wrap(`${item.title}`)));
   console.log(clc.underline(`https://caniuse.com/#feat=${item.key}`));
   console.log();
   console.log(wrap(item.description));
   console.log();
   printTableHeader();
-  eras.forEach(era => printTableRow(item, era));
+  for (let i = 0; i <= item.stats.numRows; i++) {
+    printTableRow(item.stats.data, i);
+  }
   if (item.notes) {
     console.log();
     console.log(wrap(`Notes: ${item.notes}`));
