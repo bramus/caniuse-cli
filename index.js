@@ -210,7 +210,8 @@ const findResult = function findResult(name) {
     const keywords = parseKeywords(caniuse.data[key].keywords);
 
     return caniuse.data[key].firefox_id === name ||
-      keywords.indexOf(name) >= 0;
+      keywords.indexOf(name) >= 0 ||
+      keywords.join(',').includes(name);
   });
 
   // return array of matches
