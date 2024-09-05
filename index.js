@@ -171,8 +171,10 @@ const parseKeywords = function parseKeywords(keywords) {
   keywords.split(',')
     .map(item => item.trim())
     .filter(item => item.length > 0)
-    .map(item => item.split(' ').join('-'))
-    .forEach(item => parsedKeywords.push(item));
+    .forEach(item => {
+      parsedKeywords.push(item);
+      if (item.includes(' ')) parsedKeywords.push(item.replaceAll(' ', '-'))
+    });
 
   return parsedKeywords;
 };
