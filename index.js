@@ -5,7 +5,7 @@
 const clc = require('cli-color');
 const omelette = require('omelette');
 const wrap = require('wordwrap')(80);
-const data = require('caniuse-db/fulldata-json/data-2.0.json');
+const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 
 const agents = ['ie', 'edge', 'firefox', 'chrome', 'safari', 'opera', 'ios_saf', 'op_mini', 'android', 'and_chr'];
 const defaultItemWidth = 6;
@@ -16,7 +16,7 @@ const eras = [-3, -2, -1, 0, 1, 2, 3];
  */
 const getAgentVersion = function getAgentVersion(agent, era) {
   try {
-    return data.agents[agent]
+    return caniuse.agents[agent]
       .version_list.find(item => item.era === era).version;
   } catch (error) {
     return undefined;
@@ -27,7 +27,7 @@ const getAgentVersion = function getAgentVersion(agent, era) {
  * columnWidths contains max column width for each agent
  */
 const columnWidths = agents.reduce((collection, agent) => {
-  const agentAbbr = data.agents[agent].abbr;
+  const agentAbbr = caniuse.agents[agent].abbr;
   const agentHeaderWidth = agentAbbr.length > defaultItemWidth
     ? agentAbbr.length : defaultItemWidth;
 
@@ -75,7 +75,7 @@ const padCenter = function padCenter(str, length, padStr) {
  */
 const printTableHeader = function printTableHeader() {
   agents.forEach((agent) => {
-    const col = clc.black.bgWhite(padCenter(data.agents[agent].abbr, columnWidths[agent], ' '));
+    const col = clc.black.bgWhite(padCenter(caniuse.agents[agent].abbr, columnWidths[agent], ' '));
     process.stdout.write(col);
     process.stdout.write(' ');
   });
@@ -162,7 +162,7 @@ const parseKeywords = function parseKeywords(keywords) {
  * findResult() returns `caniuse` item matching given name
  */
 const findResult = function findResult(name) {
-  const items = data.data;
+  const items = caniuse.data;
 
   // return directly matching item
   if (items[name] !== undefined) {
@@ -170,16 +170,16 @@ const findResult = function findResult(name) {
   }
 
   // find items matching by keyword or firefox_id
-  const otherResults = Object.keys(data.data).filter((key) => {
-    const keywords = parseKeywords(data.data[key].keywords);
+  const otherResults = Object.keys(caniuse.data).filter((key) => {
+    const keywords = parseKeywords(caniuse.data[key].keywords);
 
-    return data.data[key].firefox_id === name ||
+    return caniuse.data[key].firefox_id === name ||
       keywords.indexOf(name) >= 0;
   });
 
   // return array of matches
   if (otherResults.length > 0) {
-    return otherResults.reduce((list, key) => list.concat(data.data[key]), []);
+    return otherResults.reduce((list, key) => list.concat(caniuse.data[key]), []);
   }
 
   return undefined;
@@ -190,12 +190,12 @@ const findResult = function findResult(name) {
  */
 const firstArgument = ({ reply }) => {
   // add all keys
-  const dataKeys = Object.keys(data.data);
+  const dataKeys = Object.keys(caniuse.data);
 
   // add keywords and firefox_id's
-  const otherKeys = Object.keys(data.data).reduce((keys, item) => {
+  const otherKeys = Object.keys(caniuse.data).reduce((keys, item) => {
     let newKeys = [];
-    const { firefox_id, keywords } = data.data[item];
+    const { firefox_id, keywords } = caniuse.data[item];
 
     if (firefox_id.length > 0) {
       newKeys.push(firefox_id);
@@ -213,8 +213,8 @@ const firstArgument = ({ reply }) => {
 omelette`caniuse ${firstArgument}`.init();
 
 // inject key for each item in data object
-Object.keys(data.data).forEach((key) => {
-  data.data[key].key = key;
+Object.keys(caniuse.data).forEach((key) => {
+  caniuse.data[key].key = key;
 });
 
 // find and display result
