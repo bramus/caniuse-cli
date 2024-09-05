@@ -8,7 +8,7 @@ const wrap = require('wordwrap')(80);
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 
 const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
-const defaultItemWidth = 6;
+const defaultItemWidth = 8;
 
 // @TODO: Rework eras logic so that versions with the same level of support are grouped
 // e.g. https://caniuse.com/css-container-queries-style has versions 107-110 collapsed for Chrome,
@@ -30,7 +30,7 @@ const getAgentVersion = function getAgentVersion(agent, era) {
  * columnWidths contains max column width for each agent
  */
 const columnWidths = agents.reduce((collection, agent) => {
-  const agentAbbr = caniuse.agents[agent].abbr;
+  const agentAbbr = caniuse.agents[agent].browser;
   const agentHeaderWidth = agentAbbr.length > defaultItemWidth
     ? agentAbbr.length : defaultItemWidth;
 
@@ -78,7 +78,7 @@ const padCenter = function padCenter(str, length, padStr) {
  */
 const printTableHeader = function printTableHeader() {
   agents.forEach((agent) => {
-    const col = clc.black.bgWhite(padCenter(caniuse.agents[agent].abbr, columnWidths[agent], ' '));
+    const col = clc.black.bgWhite(padCenter(caniuse.agents[agent].browser, columnWidths[agent], ' '));
     process.stdout.write(col);
     process.stdout.write(' ');
   });
