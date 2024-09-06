@@ -1,18 +1,21 @@
-# caniuse-cli
+# `@bramus/caniuse-cli`
 
-Command line tool for caniuse database.
+Command line tool for [Can I Use](https://caniuse.com/).
 
-![caniuse-cli screenshot](https://github.com/dsenkus/caniuse-cli/raw/master/screenshot.png?raw=true)
+![caniuse-cli screenshot](https://github.com/bramus/caniuse-cli/raw/main/screenshot.png?raw=true)
 
 ## Features
 
 * Uses [caniuse-db](https://github.com/Fyrd/caniuse) internally, so results are displayed instantly.
 * Supports tab autocompletion in **zsh**, **bash** and **fish**.
+* Version Collapsing in the table
+* Shows notes by number
+* _(planned)_ MDN BCD integration
 
 ## Installation
 
 ```
-# npm install -g caniuse-cli
+# npm install -g @bramus/caniuse-cli
 ```
 
 ## Usage
@@ -20,7 +23,9 @@ Command line tool for caniuse database.
 ```bash
 $ caniuse webrtc
 ```
+
 ## Enable Tab Autocompletion
+
 In **zsh**:
 
 ```bash
@@ -55,3 +60,7 @@ bash: __ltrim_colon_completions: command not found
 ```
 
 Solution: install `bash-completion` package
+
+## Acknowledgements
+
+This project is built on the original https://github.com/dsenkus/caniuse-cli/
