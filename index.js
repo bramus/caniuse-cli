@@ -4,8 +4,11 @@
 
 const clc = require('cli-color');
 const omelette = require('omelette');
-const wrap = require('wordwrap')(80);
+const wordwrap = require('wordwrap');
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
+
+const wrap = wordwrap(80);
+const wrapNote = wordwrap.hard(4, 76);
 
 const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
 const defaultItemWidth = 10;
@@ -274,7 +277,7 @@ const printItem = function printItem(item) {
     console.log();
     matchedNotes.forEach(num => {
       const note = item.notes_by_num[num];
-      console.log(wrap(`[${num}] ${note}`));
+      console.log(wrapNote(`[${num}] ${note}`).trimLeft());
     })
     console.log();
   }
