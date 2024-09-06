@@ -323,6 +323,8 @@ const findResult = function findResult(name) {
 
     return caniuse.data[key].firefox_id === name
       || keywords.indexOf(name) >= 0
+      || keywords.includes(name)
+      || key.includes(name)
       || keywords.join(',').includes(name);
   });
 
