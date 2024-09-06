@@ -8,10 +8,7 @@ const wrap = require('wordwrap')(80);
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 
 const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
-const defaultItemWidth = 12;
-
-// @TODO: reinstate these …
-const columnWidths = {};
+const defaultItemWidth = 10;
 
 /**
  * getCurrentAgentVersion() returns the current agent version
@@ -50,7 +47,7 @@ const padCenter = function padCenter(str, length = defaultItemWidth, padStr) {
 /**
  * printTableHeader() prints `caniuse` table header
  */
-const printTableHeader = function printTableHeader() {
+const printTableHeader = function printTableHeader(columnWidths) {
   agents.forEach((agent) => {
     const col = clc.black.bgWhite(padCenter(caniuse.agents[agent].browser, columnWidths[agent], ' '));
     process.stdout.write(col);
@@ -63,44 +60,42 @@ const printTableHeader = function printTableHeader() {
 /**
  * printTableRowItem prints `caniuse` table row column
  */
-const printTableRowItem = function printTableRowItem(agent, versionString, statArray) {
+const printTableRowItem = function printTableRowItem(versionString, statArray, columnWidth) {
+  const paddedVersionString = padCenter(versionString, columnWidth, ' ');
   
   // Support is indicated by the first entry in the statArray
-  const isSupported = statArray[0];
-  
-  const text = padCenter(versionString, columnWidths[agent], ' ');
-
-  switch (isSupported) {
+  switch (statArray[0]) {
     case 'y': // (Y)es, supported by default
-      process.stdout.write(clc.white.bgGreen(text));
+      process.stdout.write(clc.white.bgGreen(paddedVersionString));
       return;
     case 'a': // (A)lmost supported (aka Partial support)
-      process.stdout.write(clc.white.bgYellow(text));
+      process.stdout.write(clc.white.bgYellow(paddedVersionString));
       return;
     case 'u': // Support (u)nknown
-      process.stdout.write(clc.white.bgXterm(240)(text));
+      process.stdout.write(clc.white.bgXterm(240)(paddedVersionString));
       return;
     case 'p': // No support, but has (P)olyfill
     case 'n': // (N)o support, or disabled by default
     case 'x': // Requires prefi(x) to work
     case 'd': // (D)isabled by default (need to enable flag or something)
     default:
-      process.stdout.write(clc.white.bgRed(text));
+      process.stdout.write(clc.white.bgRed(paddedVersionString));
   }
 };
 
 /**
  *  printTableRow prints `caniuse` trable row
  */
-const printTableRow = function printTableRow(stats, index) {
+const printTableRow = function printTableRow(stats, index, columnWidths) {
   agents.forEach((agent, i) => {
     let dataItem = stats[agent][index];
+    const columnWidth = columnWidths[agent];
 
     if (dataItem !== null) {
-      printTableRowItem(agent, dataItem.versionStringWithNotes, dataItem.statArray);
+      printTableRowItem(dataItem.versionStringWithNotes, dataItem.statArray, columnWidth);
     } else {
       // Fill up cell with whitespace
-      process.stdout.write(padCenter('', columnWidths[agent], ' '));
+      process.stdout.write(padCenter('', columnWidth, ' '));
     }
 
     // Space between the cells
@@ -120,6 +115,7 @@ const prepStats = function prepStats(stats) {
 
   const newStats = {};
   const agentPositions = {};
+  const columnWidths = {};
   const allMatchedNotes = new Set();
 
   agents.forEach(agent => {
@@ -216,10 +212,20 @@ const prepStats = function prepStats(stats) {
     };
   });
 
+  // Extract the columnWidth per agent, which is derived from the entry with the largest amount of characters
+  agents.forEach(agent => {
+    const stringLengths = newStats[agent].map(a => a.versionStringWithNotes.length);
+    const maxStringLength = Math.max(
+      ...stringLengths,
+      caniuse.agents[agent].browser.length,
+      defaultItemWidth
+    );
+    columnWidths[agent] = maxStringLength + 2;
+  });
+
   // Pad the data per agent, so that each agent has the same amount of entries before and after the current
   const maxNumBeforeCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numBeforeCurrent));
   const maxNumAfterCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numAfterCurrent));
-
   agents.forEach(agent => {
     if (agentPositions[agent].numBeforeCurrent < maxNumBeforeCurrent) {
       for (let i = 0; i < maxNumBeforeCurrent - agentPositions[agent].numBeforeCurrent; i++) {
@@ -237,6 +243,7 @@ const prepStats = function prepStats(stats) {
     stats: newStats,
     numRows: maxNumBeforeCurrent + maxNumAfterCurrent,
     matchedNotes: Array.from(allMatchedNotes).sort((a,b) => a - b),
+    columnWidths,
   };
 }
 
@@ -245,15 +252,15 @@ const prepStats = function prepStats(stats) {
  * printItem() prints `caniuse` results for specified item
  */
 const printItem = function printItem(item) {
-  const { stats, numRows, matchedNotes } = prepStats(item.stats);
+  const { stats, numRows, matchedNotes, columnWidths } = prepStats(item.stats);
   console.log(clc.bold(wrap(`${item.title}`)));
   console.log(clc.underline(`https://caniuse.com/#feat=${item.key}`));
   console.log();
   console.log(wrap(item.description));
   console.log();
-  printTableHeader();
+  printTableHeader(columnWidths);
   for (let i = 0; i <= numRows; i++) {
-    printTableRow(stats, i);
+    printTableRow(stats, i, columnWidths);
   }
 
   if (item.notes) {
