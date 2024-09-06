@@ -24,8 +24,8 @@
   "license": "MIT",
   "dependencies": {
     "caniuse-db": "^1.0.30001657",
-    "cli-color": "^1.2.0",
-    "omelette": "^0.4.5",
+    "cli-color": "^1.4.0",
+    "omelette": "^0.4.17",
     "wordwrap": "^1.0.0"
   },
   "devDependencies": {
