@@ -123,10 +123,11 @@ const printTableRow = function printTableRow(stats, index) {
   process.stdout.write('\n');
 };
 
-const flattenStats = function flattenStats(stats) {
+const prepStats = function prepStats(stats) {
 
   const newStats = {};
   const agentPositions = {};
+  const allMatchedNotes = new Set();
 
   agents.forEach(agent => {
     // Get original stats
@@ -162,11 +163,19 @@ const flattenStats = function flattenStats(stats) {
 
       const isCurrentVersion = version == currentVersion;
       if (stat != prevStat || isCurrentVersion) {
+
+        const statsArray = stat.split(' ');
+        const matchedNotes = stat.split(' ').filter(s => s.startsWith('#')).map(s => s.substr(1));
+
         groupedStats.push({
           stat,
+          statsArray,
+          matchedNotes,
           versions: [version],
           currentVersion: isCurrentVersion,
         });
+
+        matchedNotes.forEach(n => allMatchedNotes.add(n));
 
         if (isCurrentVersion) {
           indexOfCurrent = groupedStats.length - 1;
@@ -204,13 +213,11 @@ const flattenStats = function flattenStats(stats) {
     newStats[agent] = groupedStats;
     agentPositions[agent] = {
       numBeforeCurrent,
-      indexOfCurrent,
       numAfterCurrent,
     };
   });
 
   // Pad the data per agent, so that each agent has the same amount of entries before and after the current
-  // (thereby making the indexOfCurrent the same for all agents)
   const maxNumBeforeCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numBeforeCurrent));
   const maxNumAfterCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numAfterCurrent));
 
@@ -228,8 +235,9 @@ const flattenStats = function flattenStats(stats) {
   });
 
   return {
-    data: newStats,
+    stats: newStats,
     numRows: maxNumBeforeCurrent + maxNumAfterCurrent,
+    matchedNotes: Array.from(allMatchedNotes).sort((a,b) => a - b),
   };
 }
 
@@ -238,28 +246,30 @@ const flattenStats = function flattenStats(stats) {
  * printItem() prints `caniuse` results for specified item
  */
 const printItem = function printItem(item) {
-  item.stats = flattenStats(item.stats);
+  const { stats, numRows, matchedNotes } = prepStats(item.stats);
   console.log(clc.bold(wrap(`${item.title}`)));
   console.log(clc.underline(`https://caniuse.com/#feat=${item.key}`));
   console.log();
   console.log(wrap(item.description));
   console.log();
   printTableHeader();
-  for (let i = 0; i <= item.stats.numRows; i++) {
-    printTableRow(item.stats.data, i);
+  for (let i = 0; i <= numRows; i++) {
+    printTableRow(stats, i);
   }
+
   if (item.notes) {
     console.log();
     console.log(wrap(`Notes: ${item.notes}`));
   }
-  // @TODO: Only print the notes that were printed in tablerows
-  if (item.notes_by_num) {
+
+  if (matchedNotes) {
     console.log();
     console.log(`Notes by number:`);
     console.log();
-    Object.entries(item.notes_by_num).forEach(([num, note]) => {
+    matchedNotes.forEach(num => {
+      const note = item.notes_by_num[num];
       console.log(wrap(`[${num}] ${note}`));
-    });
+    })
     console.log();
   }
 };
