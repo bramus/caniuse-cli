@@ -2,6 +2,10 @@
 
 Command line tool for [Can I Use](https://caniuse.com/).
 
+![npm](https://img.shields.io/npm/v/%40bramus%2Fcaniuse-cli)
+![npm bundle size](https://img.shields.io/bundlejs/size/%40bramus/caniuse-cli)
+![NPM](https://img.shields.io/npm/l/%40bramus/caniuse-cli)
+
 ![caniuse-cli screenshot](https://github.com/bramus/caniuse-cli/raw/main/screenshot.png?raw=true)
 
 ## Features
@@ -21,7 +25,7 @@ Command line tool for [Can I Use](https://caniuse.com/).
 ## Usage
 
 ```bash
-$ caniuse webrtc
+$ caniuse viewport-units
 ```
 
 ## Enable Tab Autocompletion
