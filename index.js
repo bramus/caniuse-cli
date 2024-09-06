@@ -303,8 +303,7 @@ const parseKeywords = function parseKeywords(keywords) {
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
     .forEach((item) => {
-      parsedKeywords.push(item);
-      if (item.includes(' ')) parsedKeywords.push(item.replaceAll(' ', '-'));
+      parsedKeywords.push(item.replaceAll(' ', '-'));
     });
 
   return parsedKeywords;
@@ -388,9 +387,22 @@ const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(ent
  * findResult() returns `caniuse` item matching given name
  */
 const findResult = function findResult(name) {
-  // return directly matching item from caniuse
-  if (caniuse.data[name] !== undefined) {
-    return caniuse.data[name];
+  // Check CanIUse
+  let caniuseResults = [];
+  if (caniuse.data[name.replaceAll(' ', '-')] !== undefined) {
+    caniuseResults = [caniuse.data[name.replaceAll(' ', '-')]];
+  } else {
+    // find caniuse items matching by keyword or firefox_id
+    caniuseResults = Object.keys(caniuse.data).filter((key) => {
+      const keywords = parseKeywords(caniuse.data[key].keywords);
+  
+      return caniuse.data[key].firefox_id === name
+        || keywords.includes(name.replaceAll(' ', '-'))
+        || key.includes(name.replaceAll(' ', '-'))
+        || caniuse.data[key].title.replaceAll(' ','-').includes(name.replaceAll(' ', '-'))
+        || keywords.join(',').includes(name.replaceAll(' ', '-'));
+    })
+    .reduce((list, key) => list.concat(caniuse.data[key]), []);
   }
 
   // Check BCD
@@ -419,17 +431,6 @@ const findResult = function findResult(name) {
 
   // @TODO: Convert BCD format to CanIUse format
   bcdResults = bcdResults.map(bcdResult => convertBCDEntryToCanIUseEntry(bcdResult.key, bcdResult.data));
-
-  // find caniuse items matching by keyword or firefox_id
-  const caniuseResults = Object.keys(caniuse.data).filter((key) => {
-    const keywords = parseKeywords(caniuse.data[key].keywords);
-
-    return caniuse.data[key].firefox_id === name
-      || keywords.includes(name)
-      || key.includes(name)
-      || keywords.join(',').includes(name);
-  })
-  .reduce((list, key) => list.concat(caniuse.data[key]), []);
 
   // return array of matches
   if (caniuseResults.length > 0 || bcdResults.length > 0) {
@@ -475,12 +476,8 @@ Object.keys(caniuse.data).forEach((key) => {
 const name = process.argv[2] ? process.argv[2].toLowerCase() : '';
 const res = findResult(name);
 
-if (res !== undefined && res.length) {
-  if (Array.isArray(res)) {
-    res.forEach((item) => printItem(item));
-  } else {
-    printItem(res);
-  }
+if (res !== undefined) {
+  res.forEach((item) => printItem(item));
 } else {
   console.log('Nothing was found');
 }
