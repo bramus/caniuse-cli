@@ -5,6 +5,10 @@
   },
   "rules": {
     "no-bitwise": 0,
-    "no-console": 0
+    "no-console": 0,
+    "camelcase": 0,
+    "no-plusplus": 0,
+    "comma-dangle": 0,
+    "no-restricted-syntax": 0
   }
 }

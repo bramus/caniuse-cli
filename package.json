@@ -16,6 +16,8 @@
   "scripts": {
     "upgrade-db": "npm update --save caniuse-db && git add package.json && git commit -m \"upgrade db\"",
     "bump-version": "node ./bump_version.js",
+    "lint": "eslint index.js",
+    "lintfix": "eslint --fix index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Bramus",
@@ -27,10 +29,13 @@
     "wordwrap": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^4.11.0",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-plugin-import": "^2.8.0"
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.30.0",
+    "eslint-plugin-jsx-a11y": "^6.10.0",
+    "eslint-plugin-react": "^7.35.2",
+    "eslint-plugin-react-hooks": "^4.6.2"
   },
   "repository": {
     "type": "git",

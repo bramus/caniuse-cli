@@ -39,7 +39,7 @@ const strRepeat = function strRepeat(str, qty) {
  * padCenter() returns fixed length string,
  * padding with padStr from both sides if necessary
  */
-const padCenter = function padCenter(str, length = defaultItemWidth, padStr) {
+const padCenter = function padCenter(str, length = defaultItemWidth, padStr = ' ') {
   const padLen = length - str.length;
 
   return strRepeat(padStr, Math.ceil(padLen / 2))
@@ -65,7 +65,7 @@ const printTableHeader = function printTableHeader(columnWidths) {
  */
 const printTableRowItem = function printTableRowItem(versionString, statArray, columnWidth) {
   const paddedVersionString = padCenter(versionString, columnWidth, ' ');
-  
+
   // Support is indicated by the first entry in the statArray
   switch (statArray[0]) {
     case 'y': // (Y)es, supported by default
@@ -91,7 +91,7 @@ const printTableRowItem = function printTableRowItem(versionString, statArray, c
  */
 const printTableRow = function printTableRow(stats, index, columnWidths) {
   agents.forEach((agent, i) => {
-    let dataItem = stats[agent][index];
+    const dataItem = stats[agent][index];
     const columnWidth = columnWidths[agent];
 
     if (dataItem !== null) {
@@ -115,13 +115,12 @@ const printTableRow = function printTableRow(stats, index, columnWidths) {
 };
 
 const prepStats = function prepStats(stats) {
-
   const newStats = {};
   const agentPositions = {};
   const columnWidths = {};
   const allMatchedNotes = new Set();
 
-  agents.forEach(agent => {
+  agents.forEach((agent) => {
     // Get original stats
     // @TODO: handle “all”
     const agentStats = stats[agent];
@@ -149,15 +148,14 @@ const prepStats = function prepStats(stats) {
     const groupedStats = [];
     let prevStat = null;
     // @TODO: These don’t retain order … so you’re basically screwed
-    for (version_list_entry of caniuse.agents[agent].version_list) {
-      const version = version_list_entry.version;
+    for (const version_list_entry of caniuse.agents[agent].version_list) {
+      const { version } = version_list_entry;
       const stat = agentStats[version];
 
-      const isCurrentVersion = version == currentVersion;
-      if (stat != prevStat || isCurrentVersion) {
-
+      const isCurrentVersion = (version === currentVersion);
+      if (stat !== prevStat || isCurrentVersion) {
         const statArray = stat.split(' ');
-        const matchedNotes = stat.split(' ').filter(s => s.startsWith('#')).map(s => s.substr(1));
+        const matchedNotes = stat.split(' ').filter((s) => s.startsWith('#')).map((s) => s.substr(1));
 
         groupedStats.push({
           stat,
@@ -167,19 +165,17 @@ const prepStats = function prepStats(stats) {
           currentVersion: isCurrentVersion,
         });
 
-        matchedNotes.forEach(n => allMatchedNotes.add(n));
+        matchedNotes.forEach((n) => allMatchedNotes.add(n));
 
         if (isCurrentVersion) {
           indexOfCurrent = groupedStats.length - 1;
-        } else { 
-          if (indexOfCurrent === null) {
-            numBeforeCurrent++;
-          } else {
-            numAfterCurrent++;
-          }
+        } else if (indexOfCurrent === null) {
+          numBeforeCurrent++;
+        } else {
+          numAfterCurrent++;
         }
       } else {
-        groupedStats[groupedStats.length-1].versions.push(version);
+        groupedStats[groupedStats.length - 1].versions.push(version);
       }
 
       // Store prevStat. Set it to null when isCurrentVersion
@@ -189,14 +185,14 @@ const prepStats = function prepStats(stats) {
 
     // Flatten the versions
     // E.g.  [1,2,3] --> '1-3'
-    for (let entry of groupedStats) {
+    for (const entry of groupedStats) {
       const { versions } = entry;
       let versionString = '';
-      if (versions.length == 1) {
-        versionString = versions[0];
+      if (versions.length === 1) {
+        versionString = versions[0]; // eslint-disable-line prefer-destructuring
       } else {
         const firstVersion = versions[0].split('-')[0];
-        const lastVersion = versions[versions.length-1].includes('-') ? versions[versions.length-1].split('-')[1] : versions[versions.length-1];
+        const lastVersion = versions[versions.length - 1].includes('-') ? versions[versions.length - 1].split('-')[1] : versions[versions.length - 1];
         versionString = `${firstVersion}-${lastVersion}`;
       }
       entry.versionString = versionString;
@@ -215,9 +211,10 @@ const prepStats = function prepStats(stats) {
     };
   });
 
-  // Extract the columnWidth per agent, which is derived from the entry with the largest amount of characters
-  agents.forEach(agent => {
-    const stringLengths = newStats[agent].map(a => a.versionStringWithNotes.length);
+  // Extract the columnWidth per agent.
+  // This is derived from the entry with the largest amount of characters
+  agents.forEach((agent) => {
+    const stringLengths = newStats[agent].map((a) => a.versionStringWithNotes.length);
     const maxStringLength = Math.max(
       ...stringLengths,
       caniuse.agents[agent].browser.length,
@@ -226,10 +223,18 @@ const prepStats = function prepStats(stats) {
     columnWidths[agent] = maxStringLength + 2;
   });
 
-  // Pad the data per agent, so that each agent has the same amount of entries before and after the current
-  const maxNumBeforeCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numBeforeCurrent));
-  const maxNumAfterCurrent = Math.max(...Object.values(agentPositions).map(agentPositionInfo => agentPositionInfo.numAfterCurrent));
-  agents.forEach(agent => {
+  // Pad the data per agent, so that each agent
+  // has the same amount of entries before and after the current.
+  // It’ll result in the current version for each agent being on the same line in the table.
+  const maxNumBeforeCurrent = Math.max(
+    ...Object.values(agentPositions)
+      .map((agentPositionInfo) => agentPositionInfo.numBeforeCurrent)
+  );
+  const maxNumAfterCurrent = Math.max(
+    ...Object.values(agentPositions)
+      .map((agentPositionInfo) => agentPositionInfo.numAfterCurrent)
+  );
+  agents.forEach((agent) => {
     if (agentPositions[agent].numBeforeCurrent < maxNumBeforeCurrent) {
       for (let i = 0; i < maxNumBeforeCurrent - agentPositions[agent].numBeforeCurrent; i++) {
         newStats[agent].unshift(null);
@@ -245,17 +250,18 @@ const prepStats = function prepStats(stats) {
   return {
     stats: newStats,
     numRows: maxNumBeforeCurrent + maxNumAfterCurrent,
-    matchedNotes: Array.from(allMatchedNotes).sort((a,b) => a - b),
+    matchedNotes: Array.from(allMatchedNotes).sort((a, b) => a - b),
     columnWidths,
   };
-}
-
+};
 
 /**
  * printItem() prints `caniuse` results for specified item
  */
 const printItem = function printItem(item) {
-  const { stats, numRows, matchedNotes, columnWidths } = prepStats(item.stats);
+  const {
+    stats, numRows, matchedNotes, columnWidths,
+  } = prepStats(item.stats);
   console.log(clc.bold(wrap(`${item.title}`)));
   console.log(clc.underline(`https://caniuse.com/#feat=${item.key}`));
   console.log();
@@ -273,12 +279,12 @@ const printItem = function printItem(item) {
 
   if (matchedNotes) {
     console.log();
-    console.log(`Notes by number:`);
+    console.log('Notes by number:');
     console.log();
-    matchedNotes.forEach(num => {
+    matchedNotes.forEach((num) => {
       const note = item.notes_by_num[num];
       console.log(wrapNote(`[${num}] ${note}`).trimLeft());
-    })
+    });
     console.log();
   }
 };
@@ -291,11 +297,11 @@ const parseKeywords = function parseKeywords(keywords) {
   const parsedKeywords = [];
 
   keywords.split(',')
-    .map(item => item.trim())
-    .filter(item => item.length > 0)
-    .forEach(item => {
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .forEach((item) => {
       parsedKeywords.push(item);
-      if (item.includes(' ')) parsedKeywords.push(item.replaceAll(' ', '-'))
+      if (item.includes(' ')) parsedKeywords.push(item.replaceAll(' ', '-'));
     });
 
   return parsedKeywords;
@@ -316,9 +322,9 @@ const findResult = function findResult(name) {
   const otherResults = Object.keys(caniuse.data).filter((key) => {
     const keywords = parseKeywords(caniuse.data[key].keywords);
 
-    return caniuse.data[key].firefox_id === name ||
-      keywords.indexOf(name) >= 0 ||
-      keywords.join(',').includes(name);
+    return caniuse.data[key].firefox_id === name
+      || keywords.indexOf(name) >= 0
+      || keywords.join(',').includes(name);
   });
 
   // return array of matches
@@ -362,12 +368,12 @@ Object.keys(caniuse.data).forEach((key) => {
 });
 
 // find and display result
-const name = process.argv[2]?.toLowerCase();
+const name = process.argv[2] ? process.argv[2].toLowerCase() : '';
 const res = findResult(name);
 
 if (res !== undefined) {
   if (Array.isArray(res)) {
-    res.forEach(item => printItem(item));
+    res.forEach((item) => printItem(item));
   } else {
     printItem(res);
   }
