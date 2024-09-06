@@ -6,11 +6,13 @@ const clc = require('cli-color');
 const omelette = require('omelette');
 const wordwrap = require('wordwrap');
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
+const bcd = require('@mdn/browser-compat-data');
 
 const wrap = wordwrap(80);
 const wrapNote = wordwrap.hard(4, 76);
 
 const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
+const agents_bcd = ['chrome', 'edge', 'safari', 'firefox', 'safari_ios', 'chrome_android'];
 const defaultItemWidth = 10;
 
 /**
@@ -261,11 +263,13 @@ const printItem = function printItem(item) {
   const {
     stats, numRows, matchedNotes, columnWidths,
   } = prepStats(item.stats);
-  console.log(clc.bold(wrap(`${item.title}`)));
+  console.log(clc.bold(wrap(`${item.title}`))); // @TODO: Strip HTML
   console.log(clc.underline(`https://caniuse.com/#feat=${item.key}`));
   console.log();
-  console.log(wrap(item.description));
-  console.log();
+  if (item.description) {
+    console.log(wrap(item.description));
+    console.log();
+  }
   printTableHeader(columnWidths);
   for (let i = 0; i <= numRows; i++) {
     printTableRow(stats, i, columnWidths);
@@ -276,7 +280,7 @@ const printItem = function printItem(item) {
     console.log(wrap(`Notes: ${item.notes}`));
   }
 
-  if (matchedNotes) {
+  if (matchedNotes && matchedNotes.length) {
     console.log();
     console.log('Notes by number:');
     console.log();
@@ -284,8 +288,8 @@ const printItem = function printItem(item) {
       const note = item.notes_by_num[num];
       console.log(wrapNote(`[${num}] ${note}`).trimLeft());
     });
-    console.log();
   }
+  console.log();
 };
 
 /**
@@ -306,31 +310,130 @@ const parseKeywords = function parseKeywords(keywords) {
   return parsedKeywords;
 };
 
+const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(agent, bcdSupport) {
+  let versionSupport = [];
+
+  // Prefill all versions with no support
+  const allAgentVersions = caniuse.agents[agent].version_list;
+  for (const agentVersionEntry of allAgentVersions) {
+    versionSupport.push({
+      support: 'x',
+      version: agentVersionEntry.version,
+    });
+  }
+
+  function process(bcdSupport, versionSupport) {
+    // This feature was never released if version_added is false
+    if (bcdSupport.version_added === false) {
+      return;
+    }
+
+    // When there are multiple updates, BCD stores it as an array
+    if (Array.isArray(bcdSupport)) {
+      bcdSupport.forEach(subEntry => process(subEntry, versionSupport));
+      return;
+    }
+  
+    // This feature was released, now determine the start and end offsets in the versions array
+    let startIndex = 0;
+    let endIndex = versionSupport.length - 1;
+
+    if (bcdSupport.version_added) {
+      startIndex = Math.max(startIndex, versionSupport.findIndex(e => e.version === bcdSupport.version_added));
+    }
+    if (bcdSupport.version_removed) {
+      endIndex = Math.min(endIndex, versionSupport.findIndex(e => e.version === bcdSupport.version_removed) - 1);
+    }
+    const supportChar = (bcdSupport.partial_implementation === true) ? 'a' : 'y';
+    for (let i = startIndex; i <= endIndex; i++) {
+      versionSupport[i].support = supportChar;
+    }
+
+    // @TODO: Process prefix, stored in bcdSupport.prefix
+    // @TODO: Process notes stored in bcdSupport.notes
+
+    return versionSupport;
+  }
+
+  process(bcdSupport, versionSupport);
+
+  // Return as object
+  return versionSupport.reduce((toReturn, entry) => {
+    toReturn[entry.version] = entry.support;
+    return toReturn;
+  }, {});
+}
+
+const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(entryKey, entryData) {
+  const toReturn = {
+    key: entryKey,
+    title: entryData.description,
+    description: '',
+    spec: entryData.spec_url,
+    notes: '',
+    notes_by_num: [],
+    stats: {}, // To be filled on the next few lines …
+  };
+
+  agents_bcd.forEach((agent_bcd, i) => {
+    // Map BCD agent to CIU agent
+    const agent_caniuse = agents[i];
+    toReturn.stats[agent_caniuse] = convertBCDSupportToCanIUseStat(agent_caniuse, entryData.support[agent_bcd]);
+  });
+
+  return toReturn;
+};
+
 /**
  * findResult() returns `caniuse` item matching given name
  */
 const findResult = function findResult(name) {
-  const items = caniuse.data;
-
-  // return directly matching item
-  if (items[name] !== undefined) {
-    return items[name];
+  // return directly matching item from caniuse
+  if (caniuse.data[name] !== undefined) {
+    return caniuse.data[name];
   }
 
-  // find items matching by keyword or firefox_id
-  const otherResults = Object.keys(caniuse.data).filter((key) => {
+  // Check BCD
+  let bcdResults = [];
+  for (const section of Object.keys(bcd).filter(k => !k.startsWith('__'))) { // css, js, html, …
+    for (const [subsectionKey, subsection] of Object.entries(bcd[section])) { // at-rules, properties, …
+      for (const [entryKey, entry] of Object.entries(subsection)) {
+        if (entryKey == '__compat') {
+          if (subsectionKey === name || entry.description?.includes(name)) {
+            bcdResults.push({
+              key: `mdn-${section}_${subsectionKey}`,
+              data: entry
+            });
+          }
+        } else {
+          if (entryKey === name || entry['__compat']?.description?.includes(name)) {
+            bcdResults.push({
+              key: `mdn-${section}_${subsectionKey}_${entryKey}`,
+              data: entry['__compat']
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // @TODO: Convert BCD format to CanIUse format
+  bcdResults = bcdResults.map(bcdResult => convertBCDEntryToCanIUseEntry(bcdResult.key, bcdResult.data));
+
+  // find caniuse items matching by keyword or firefox_id
+  const caniuseResults = Object.keys(caniuse.data).filter((key) => {
     const keywords = parseKeywords(caniuse.data[key].keywords);
 
     return caniuse.data[key].firefox_id === name
-      || keywords.indexOf(name) >= 0
       || keywords.includes(name)
       || key.includes(name)
       || keywords.join(',').includes(name);
-  });
+  })
+  .reduce((list, key) => list.concat(caniuse.data[key]), []);
 
   // return array of matches
-  if (otherResults.length > 0) {
-    return otherResults.reduce((list, key) => list.concat(caniuse.data[key]), []);
+  if (caniuseResults.length > 0 || bcdResults.length > 0) {
+    return [...bcdResults, ...caniuseResults];
   }
 
   return undefined;
@@ -372,7 +475,7 @@ Object.keys(caniuse.data).forEach((key) => {
 const name = process.argv[2] ? process.argv[2].toLowerCase() : '';
 const res = findResult(name);
 
-if (res !== undefined) {
+if (res !== undefined && res.length) {
   if (Array.isArray(res)) {
     res.forEach((item) => printItem(item));
   } else {

@@ -2,6 +2,7 @@
   "name": "@bramus/caniuse-cli",
   "version": "1.0.0",
   "description": "Command line tool for Can I Use",
+  "description": "Command line tool for “Can I Use…” and MDN Browser Compat Data",
   "keywords": [
     "support",
     "css",
@@ -23,6 +24,7 @@
   "author": "Bramus",
   "license": "MIT",
   "dependencies": {
+    "@mdn/browser-compat-data": "^5.5.50",
     "caniuse-db": "^1.0.30001657",
     "cli-color": "^1.4.0",
     "omelette": "^0.4.17",

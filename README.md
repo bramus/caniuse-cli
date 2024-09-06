@@ -1,6 +1,6 @@
 # `@bramus/caniuse-cli`
 
-Command line tool for [Can I Use](https://caniuse.com/).
+Command line tool for [“Can I Use …”](https://caniuse.com/) and [MDN Browser Compat Data](https://github.com/mdn/browser-compat-data)
 
 ![npm](https://img.shields.io/npm/v/%40bramus%2Fcaniuse-cli)
 ![npm bundle size](https://img.shields.io/bundlejs/size/%40bramus/caniuse-cli)
@@ -10,11 +10,10 @@ Command line tool for [Can I Use](https://caniuse.com/).
 
 ## Features
 
-* Uses [caniuse-db](https://github.com/Fyrd/caniuse) internally, so results are displayed instantly.
+* Instant, offline, results powered by [caniuse-db](https://github.com/Fyrd/caniuse) and [`@mdn/browser-compat-data`](https://github.com/mdn/browser-compat-data).
+* Collapses versions with the same level of support in the table, just like the [“Can I Use …” website](https://caniuse.com/).
+* Shows notes by number.
 * Supports tab autocompletion in **zsh**, **bash** and **fish**.
-* Version Collapsing in the table
-* Shows notes by number
-* _(planned)_ MDN BCD integration
 
 ## Installation
 
@@ -26,6 +25,8 @@ Command line tool for [Can I Use](https://caniuse.com/).
 
 ```bash
 $ caniuse viewport-units
+$ caniuse "viewport units"
+$ caniuse @property
 ```
 
 ## Enable Tab Autocompletion
