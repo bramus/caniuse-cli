@@ -408,28 +408,28 @@ const findResult = function findResult(name) {
   // Check BCD
   let bcdResults = [];
   for (const section of Object.keys(bcd).filter(k => !k.startsWith('__'))) { // css, js, html, …
-    for (const [subsectionKey, subsection] of Object.entries(bcd[section])) { // at-rules, properties, …
-      for (const [entryKey, entry] of Object.entries(subsection)) {
-        if (entryKey == '__compat') {
-          if (subsectionKey === name || entry.description?.includes(name)) {
-            bcdResults.push({
-              key: `mdn-${section}_${subsectionKey}`,
-              data: entry
-            });
-          }
-        } else {
-          if (entryKey === name || entry['__compat']?.description?.includes(name)) {
-            bcdResults.push({
-              key: `mdn-${section}_${subsectionKey}_${entryKey}`,
-              data: entry['__compat']
-            });
+    for (const [subsectionKey, subsection] of Object.entries(bcd[section])) { // css: at-rules, properties, …
+      for (const [entryKey, entry] of Object.entries(subsection)) { // properties: writing_mode, word-wrap, …
+        for (const [subEntryKey, subEntry] of Object.entries(entry)) { // writing-mode: __compat, horizontal-tb, lr, lr-tb, …
+          if (subEntryKey == '__compat') {
+            if (entryKey === name || entry['__compat'].description?.includes(name)) {
+              bcdResults.push({
+                key: `mdn-${section}_${subsectionKey}_${entryKey}`,
+                data: subEntry
+              });
+            }
+          } else {
+            if (subEntryKey === name || subEntry['__compat']?.description?.includes(name)) {
+              bcdResults.push({
+                key: `mdn-${section}_${subsectionKey}_${entryKey}_${subEntryKey}`,
+                data: subEntry['__compat']
+              });
+            }
           }
         }
       }
     }
   }
-
-  // @TODO: Convert BCD format to CanIUse format
   bcdResults = bcdResults.map(bcdResult => convertBCDEntryToCanIUseEntry(bcdResult.key, bcdResult.data));
 
   // return array of matches
