@@ -71,10 +71,10 @@ const printTableRowItem = function printTableRowItem(versionString, statArray, c
   // Support is indicated by the first entry in the statArray
   switch (statArray[0]) {
     case 'y': // (Y)es, supported by default
-      process.stdout.write(clc.white.bgGreen(paddedVersionString));
+      process.stdout.write(clc.white.bgXterm(28)(paddedVersionString));
       return;
     case 'a': // (A)lmost supported (aka Partial support)
-      process.stdout.write(clc.white.bgYellow(paddedVersionString));
+      process.stdout.write(clc.white.bgXterm(3)(paddedVersionString));
       return;
     case 'u': // Support (u)nknown
       process.stdout.write(clc.white.bgXterm(240)(paddedVersionString));
@@ -84,7 +84,7 @@ const printTableRowItem = function printTableRowItem(versionString, statArray, c
     case 'x': // Requires prefi(x) to work
     case 'd': // (D)isabled by default (need to enable flag or something)
     default:
-      process.stdout.write(clc.white.bgRed(paddedVersionString));
+      process.stdout.write(clc.white.bgXterm(124)(paddedVersionString));
   }
 };
 
