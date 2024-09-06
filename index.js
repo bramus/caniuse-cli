@@ -63,19 +63,12 @@ const printTableHeader = function printTableHeader() {
 /**
  * printTableRowItem prints `caniuse` table row column
  */
-const printTableRowItem = function printTableRowItem(agent, versionString, stat) {
-  let toPrint = versionString;
+const printTableRowItem = function printTableRowItem(agent, versionString, statArray) {
   
-  // Support is indicated by the first character of
-  const supportCodes = stat.split(' ');
-  const isSupported = supportCodes[0];
+  // Support is indicated by the first entry in the statArray
+  const isSupported = statArray[0];
   
-  const notes = supportCodes.filter(s => s.startsWith('#'));
-  if (notes.length) {
-    toPrint += ` [${notes.map(s => s.substr(1)).join(',')}]`;
-  }
-
-  const text = padCenter(toPrint, columnWidths[agent], ' ');
+  const text = padCenter(versionString, columnWidths[agent], ' ');
 
   switch (isSupported) {
     case 'y': // (Y)es, supported by default
@@ -104,7 +97,7 @@ const printTableRow = function printTableRow(stats, index) {
     let dataItem = stats[agent][index];
 
     if (dataItem !== null) {
-      printTableRowItem(agent, dataItem.versionString, dataItem.stat);
+      printTableRowItem(agent, dataItem.versionStringWithNotes, dataItem.statArray);
     } else {
       // Fill up cell with whitespace
       process.stdout.write(padCenter('', columnWidths[agent], ' '));
@@ -164,12 +157,12 @@ const prepStats = function prepStats(stats) {
       const isCurrentVersion = version == currentVersion;
       if (stat != prevStat || isCurrentVersion) {
 
-        const statsArray = stat.split(' ');
+        const statArray = stat.split(' ');
         const matchedNotes = stat.split(' ').filter(s => s.startsWith('#')).map(s => s.substr(1));
 
         groupedStats.push({
           stat,
-          statsArray,
+          statArray,
           matchedNotes,
           versions: [version],
           currentVersion: isCurrentVersion,
@@ -208,6 +201,12 @@ const prepStats = function prepStats(stats) {
         versionString = `${firstVersion}-${lastVersion}`;
       }
       entry.versionString = versionString;
+
+      if (!entry.matchedNotes.length) {
+        entry.versionStringWithNotes = versionString;
+      } else {
+        entry.versionStringWithNotes = `${versionString} [${entry.matchedNotes.join(',')}]`;
+      }
     }
 
     newStats[agent] = groupedStats;
