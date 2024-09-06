@@ -263,7 +263,7 @@ const printItem = function printItem(item) {
   const {
     stats, numRows, matchedNotes, columnWidths,
   } = prepStats(item.stats);
-  console.log(clc.bold(wrap(`${item.title.replaceAll('<code>', '`').replaceAll('</code>', '`')}`))); // @TODO: More HTML to strip?
+  console.log(clc.bold(wrap(`${(item.title ?? '(?)').replaceAll('<code>', '`').replaceAll('</code>', '`')}`))); // @TODO: More HTML to strip?
   console.log(clc.underline(`https://caniuse.com/#feat=${item.key}`));
   console.log();
   if (item.description) {
