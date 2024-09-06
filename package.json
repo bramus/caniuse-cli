@@ -17,7 +17,6 @@
   },
   "scripts": {
     "upgrade-db": "npm update --save caniuse-db && git add package.json && git commit -m \"upgrade db\"",
-    "bump-version": "node ./bump_version.js",
     "lint": "eslint index.js",
     "lintfix": "eslint --fix index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
