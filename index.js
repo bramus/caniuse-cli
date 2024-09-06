@@ -147,7 +147,6 @@ const prepStats = function prepStats(stats) {
     // ]
     const groupedStats = [];
     let prevStat = null;
-    // @TODO: These don’t retain order … so you’re basically screwed
     for (const version_list_entry of caniuse.agents[agent].version_list) {
       const { version } = version_list_entry;
       const stat = agentStats[version];
