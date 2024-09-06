@@ -21,7 +21,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Bramus",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "caniuse-db": "^1.0.30001657",
     "cli-color": "^1.2.0",

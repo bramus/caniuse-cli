@@ -61,6 +61,10 @@ bash: __ltrim_colon_completions: command not found
 
 Solution: install `bash-completion` package
 
+## License
+
+`@bramus/caniuse-cli` is released under the MIT public license. See the enclosed `LICENSE` for details.
+
 ## Acknowledgements
 
 This project is built on the original https://github.com/dsenkus/caniuse-cli/
