@@ -1,7 +1,7 @@
 {
-  "name": "caniuse-cli",
-  "version": "1.0.30001657",
-  "description": "Comman line tool for Caniuse database",
+  "name": "@bramus/caniuse-cli",
+  "version": "1.0",
+  "description": "Command line tool for Can I Use",
   "keywords": [
     "support",
     "css",
@@ -14,11 +14,11 @@
     "caniuse": "./index.js"
   },
   "scripts": {
-    "upgrade-db": "npm update --save caniuse-db && git add package.json && git commit -m \"upgrade db\" && git push origin master",
+    "upgrade-db": "npm update --save caniuse-db && git add package.json && git commit -m \"upgrade db\"",
     "bump-version": "node ./bump_version.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "David Senkus",
+  "author": "Bramus",
   "license": "ISC",
   "dependencies": {
     "caniuse-db": "^1.0.30001657",
@@ -34,6 +34,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dsenkus/caniuse-cli.git"
+    "url": "https://github.com/bramus/caniuse-cli.git"
   }
 }
