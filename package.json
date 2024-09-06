@@ -16,7 +16,7 @@
     "caniuse": "./index.js"
   },
   "scripts": {
-    "upgrade-db": "npm update --save caniuse-db && git add package.json && git commit -m \"upgrade db\"",
+    "update-data": "npm update --save caniuse-db @mdn/browser-compat-data && git add package.json && git commit -m \"Update caniuse-db/bcd\"",
     "lint": "eslint index.js",
     "lintfix": "eslint --fix index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
