@@ -452,7 +452,7 @@ const firstArgument = ({ reply }) => {
     let newKeys = [];
     const { firefox_id, keywords } = caniuse.data[item];
 
-    if (firefox_id.length > 0) {
+    if (firefox_id && firefox_id.length > 0) {
       newKeys.push(firefox_id);
     }
 
