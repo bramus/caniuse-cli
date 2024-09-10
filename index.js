@@ -473,11 +473,15 @@ Object.keys(caniuse.data).forEach((key) => {
 });
 
 // find and display result
-const name = process.argv[2] ? process.argv[2].toLowerCase() : '';
-const res = findResult(name);
+const name = process.argv[2];
+if (name) {
+  const res = findResult(name.toLowerCase());
 
-if (res !== undefined) {
-  res.forEach((item) => printItem(item));
+  if (res !== undefined) {
+    res.forEach((item) => printItem(item));
+  } else {
+    console.log('Nothing was found');
+  }
 } else {
-  console.log('Nothing was found');
+  console.log('Please pass in an argument, e.g. `caniuse viewport-units`')
 }
