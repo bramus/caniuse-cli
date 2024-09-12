@@ -16,7 +16,7 @@
     "caniuse": "./index.js"
   },
   "scripts": {
-    "update-data": "npm update --save caniuse-db @mdn/browser-compat-data && git add package.json && git commit -m \"Update caniuse-db/bcd\"",
+    "update-data": "npm update --save caniuse-db @mdn/browser-compat-data && git add package.json && git commit -m \"Update caniuse-db and/or BCD\"",
     "lint": "eslint index.js",
     "lintfix": "eslint --fix index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,7 +25,7 @@
   "license": "MIT",
   "dependencies": {
     "@mdn/browser-compat-data": "^5.5.51",
-    "caniuse-db": "^1.0.30001658",
+    "caniuse-db": "^1.0.30001660",
     "cli-color": "^1.4.0",
     "omelette": "^0.4.17",
     "wordwrap": "^1.0.0"
