@@ -322,6 +322,9 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
   }
 
   function process(bcdSupport, versionSupport) {
+    // There is no BCD available for the agent
+    if (!bcdSupport) return;
+
     // This feature was never released if version_added is false
     if (bcdSupport.version_added === false) {
       return;
