@@ -7,6 +7,7 @@ const omelette = require('omelette');
 const wordwrap = require('wordwrap');
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 const bcd = require('@mdn/browser-compat-data');
+const child_process = require('child_process')
 
 const wrap = wordwrap(80);
 const wrapNote = wordwrap.hard(4, 76);
@@ -478,6 +479,27 @@ Object.keys(caniuse.data).forEach((key) => {
 // find and display result
 const name = process.argv[2];
 if (name) {
+
+  if (name === '--update') {
+    console.log('--update flag detected … checking');
+    const caniuse_version_local = require('./node_modules/caniuse-db/package.json').version;
+    const caniuse_version_remote = child_process.execSync('npm view caniuse-db version', { encoding: 'utf8' }).trim();
+    const caniuse_outdated = caniuse_version_local != caniuse_version_remote;
+
+    const bcd_version_local = require('./node_modules/@mdn/browser-compat-data/package.json').version;
+    const bcd_version_remote = child_process.execSync('npm view @mdn/browser-compat-data version', { encoding: 'utf8' }).trim();
+    const bcd_outdated = bcd_version_local != bcd_version_remote;
+
+    if (caniuse_outdated || bcd_outdated) {
+      console.log('Updating databases …');
+      child_process.execSync('npm install caniuse-db @mdn/browser-compat-data');
+    } else {
+      console.log('Nothing to update!');
+    }
+
+    return;
+  }
+
   const res = findResult(name.toLowerCase());
 
   if (res !== undefined) {
