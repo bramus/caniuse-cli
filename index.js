@@ -7,6 +7,7 @@ const omelette = require('omelette');
 const wordwrap = require('wordwrap');
 const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
 const bcd = require('@mdn/browser-compat-data');
+const child_process = require('child_process')
 
 const wrap = wordwrap(80);
 const wrapNote = wordwrap.hard(4, 76);
@@ -543,16 +544,136 @@ Object.keys(caniuse.data).forEach((key) => {
   caniuse.data[key].key = key;
 });
 
+/**
+ * getCommandName() returns the CLI command name based on how the script was invoked
+ */
+const getCommandName = function getCommandName() {
+  if (process.env.npm_lifecycle_event === 'npx' || process.env.npm_command === 'exec') {
+    return 'npx caniuse';
+  }
+  return 'caniuse';
+};
+
+/**
+ * detectPackageManager() detects which package manager installed caniuse-cli
+ */
+const detectPackageManager = function detectPackageManager() {
+  const userAgent = process.env.npm_config_user_agent || '';
+  if (userAgent.startsWith('pnpm') || /[\\/]\.?pnpm[\\/]/.test(__dirname)) {
+    return 'pnpm';
+  }
+  if (userAgent.startsWith('bun') || /[\\/]\.?bun[\\/]/.test(__dirname)) {
+    return 'bun';
+  }
+  if (userAgent.startsWith('yarn') || /[\\/]\.?yarn[\\/]/.test(__dirname)) {
+    return 'yarn';
+  }
+  return 'npm';
+};
+
+/**
+ * fetchLatestVersion() queries the npm registry directly for a package's latest version
+ */
+const fetchLatestVersion = async function fetchLatestVersion(pkgName) {
+  const res = await fetch(`https://registry.npmjs.org/${pkgName}/latest`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch latest version for ${pkgName} (HTTP ${res.status})`);
+  }
+  const data = await res.json();
+  return data.version;
+};
+
+/**
+ * updateDatabases() checks if caniuse-db or @mdn/browser-compat-data are outdated and updates them in __dirname
+ */
+const updateDatabases = async function updateDatabases() {
+  console.log('Checking for database updates …');
+
+  const caniuseVersionLocal = require('caniuse-db/package.json').version;
+  const bcdVersionLocal = bcd.__meta.version;
+
+  let caniuseVersionRemote;
+  let bcdVersionRemote;
+  try {
+    [caniuseVersionRemote, bcdVersionRemote] = await Promise.all([
+      fetchLatestVersion('caniuse-db'),
+      fetchLatestVersion('@mdn/browser-compat-data'),
+    ]);
+  } catch (error) {
+    console.error(clc.red(`Could not check for updates: ${error.message}`));
+    process.exitCode = 1;
+    return;
+  }
+
+  const caniuseOutdated = caniuseVersionLocal !== caniuseVersionRemote;
+  const bcdOutdated = bcdVersionLocal !== bcdVersionRemote;
+
+  if (!caniuseOutdated && !bcdOutdated) {
+    console.log(clc.green('Databases are already up to date!'));
+    return;
+  }
+
+  const packagesToUpdate = [];
+  if (caniuseOutdated) {
+    console.log(`- caniuse-db: ${caniuseVersionLocal} → ${clc.green(caniuseVersionRemote)}`);
+    packagesToUpdate.push('caniuse-db@latest');
+  }
+  if (bcdOutdated) {
+    console.log(`- @mdn/browser-compat-data: ${bcdVersionLocal} → ${clc.green(bcdVersionRemote)}`);
+    packagesToUpdate.push('@mdn/browser-compat-data@latest');
+  }
+
+  const pm = detectPackageManager();
+  const installSubcommand = pm === 'npm' ? 'install --no-save' : (pm === 'bun' ? 'add --no-save' : 'add');
+  const cmd = `${pm} ${installSubcommand} ${packagesToUpdate.join(' ')}`;
+
+  console.log(`\nUpdating databases using ${pm} …`);
+  try {
+    child_process.execSync(cmd, { cwd: __dirname, stdio: 'inherit' });
+    console.log(clc.green('\nDatabases updated successfully!'));
+  } catch (error) {
+    console.error(clc.red(`\nFailed to update databases (${error.message}).`));
+    if (process.platform !== 'win32') {
+      console.error(clc.yellow(`If installed globally in a system directory, try running \`sudo ${getCommandName()} --update\`.`));
+    }
+    process.exitCode = 1;
+  }
+};
+
+const MAX_DB_AGE_DAYS = 30;
+
+/**
+ * checkDatabaseAge() checks the built-in timestamps of caniuse-db and BCD
+ * and prints a reminder if either database is older than MAX_DB_AGE_DAYS.
+ */
+const checkDatabaseAge = function checkDatabaseAge() {
+  const caniuseUpdatedMs = caniuse.updated * 1000;
+  const bcdUpdatedMs = new Date(bcd.__meta.timestamp).getTime();
+  const oldestUpdatedMs = Math.min(caniuseUpdatedMs, bcdUpdatedMs);
+  const ageInDays = Math.floor((Date.now() - oldestUpdatedMs) / (1000 * 60 * 60 * 24));
+
+  if (ageInDays >= MAX_DB_AGE_DAYS) {
+    console.log(clc.yellow(`💡 Your local browser compatibility data is ${ageInDays} days old. Run \`${getCommandName()} --update\` to update it.`));
+    console.log();
+  }
+};
+
 // find and display result
 const name = process.argv[2];
 if (name) {
-  const res = findResult(name.toLowerCase());
-
-  if (res !== undefined) {
-    res.forEach((item) => printItem(item));
+  if (name === '--update') {
+    updateDatabases();
   } else {
-    console.log('Nothing was found');
+    const res = findResult(name.toLowerCase());
+
+    if (res !== undefined) {
+      res.forEach((item) => printItem(item));
+    } else {
+      console.log('Nothing was found');
+    }
+
+    checkDatabaseAge();
   }
 } else {
-  console.log('Please pass in an argument, e.g. `caniuse viewport-units`')
+  console.log(`Please pass in an argument, e.g. \`${getCommandName()} viewport-units\``)
 }
