@@ -27,26 +27,12 @@ const getCurrentAgentVersion = function getCurrentAgentVersion(agent) {
 };
 
 /**
- * strRepeat() returns string str repeater qty times
- */
-const strRepeat = function strRepeat(str, qty) {
-  let result = '';
-  for (let i = 0; i < qty; i += 1) {
-    result += str;
-  }
-  return result;
-};
-
-/**
  * padCenter() returns fixed length string,
  * padding with padStr from both sides if necessary
  */
 const padCenter = function padCenter(str, length = defaultItemWidth, padStr = ' ') {
-  const padLen = length - str.length;
-
-  return strRepeat(padStr, Math.ceil(padLen / 2))
-    + str
-    + strRepeat(padStr, Math.floor(padLen / 2));
+  const padLen = ((length - str.length) / 2) + str.length;
+  return str.padStart(Math.ceil(padLen), padStr).padEnd(length, padStr);
 };
 
 /**
