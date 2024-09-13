@@ -327,11 +327,20 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
     let endIndex = versionSupport.length - 1;
 
     if (bcdSupport.version_added) {
-      startIndex = Math.max(startIndex, versionSupport.findIndex(e => e.version === bcdSupport.version_added));
+      // Fix for https://github.com/bramus/caniuse-cli/issues/2
+      // When the version is not found in the list of released versions, color nothing
+      const matchedIndex = versionSupport.findIndex(e => e.version === bcdSupport.version_added);
+      if (matchedIndex > -1) {
+        startIndex = Math.max(startIndex, matchedIndex);
+      } else {
+        startIndex = versionSupport.length;
+      }
     }
     if (bcdSupport.version_removed) {
       endIndex = Math.min(endIndex, versionSupport.findIndex(e => e.version === bcdSupport.version_removed) - 1);
     }
+
+    if (agent == 'edge') console.log(startIndex, endIndex);
     const supportChar = (bcdSupport.partial_implementation === true) ? 'a' : 'y';
     for (let i = startIndex; i <= endIndex; i++) {
       versionSupport[i].support = supportChar;
