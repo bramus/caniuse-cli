@@ -15,6 +15,14 @@ const agents = ['chrome', 'edge', 'safari', 'firefox', 'ios_saf', 'and_chr'];
 const agents_bcd = ['chrome', 'edge', 'safari', 'firefox', 'safari_ios', 'chrome_android'];
 const defaultItemWidth = 10;
 
+const bcdTitleMap = {
+  'api.CSS': 'CSS API',
+  'css.at-rules': 'CSS at-rule',
+  'css.types': 'CSS Types',
+  'css.properties': 'CSS Property',
+  'css.selectors': 'CSS Selector',
+}
+
 /**
  * getCurrentAgentVersion() returns the current agent version
  */
@@ -360,10 +368,10 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
   }, {});
 }
 
-const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(entryKey, entryData) {
+const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(entryKey, entryData, titlePrefix) {
   const toReturn = {
     key: entryKey,
-    title: entryData.description,
+    title: `${bcdTitleMap[titlePrefix] ?? `${titlePrefix}`}: ${entryData.description}`,
     description: '',
     spec: entryData.spec_url,
     notes: '',
@@ -412,14 +420,16 @@ const findResult = function findResult(name) {
             if (entryKey === name || entry['__compat'].description?.includes(name)) {
               bcdResults.push({
                 key: `mdn-${section}_${subsectionKey}_${entryKey}`,
-                data: subEntry
+                data: subEntry,
+                prefix: `${section}.${subsectionKey}`,
               });
             }
           } else {
             if (subEntryKey === name || subEntry['__compat']?.description?.includes(name)) {
               bcdResults.push({
                 key: `mdn-${section}_${subsectionKey}_${entryKey}_${subEntryKey}`,
-                data: subEntry['__compat']
+                data: subEntry['__compat'],
+                prefix: `${section}.${subsectionKey}`,
               });
             }
           }
@@ -427,7 +437,7 @@ const findResult = function findResult(name) {
       }
     }
   }
-  bcdResults = bcdResults.map(bcdResult => convertBCDEntryToCanIUseEntry(bcdResult.key, bcdResult.data));
+  bcdResults = bcdResults.map(bcdResult => convertBCDEntryToCanIUseEntry(bcdResult.key, bcdResult.data, bcdResult.prefix));
 
   // return array of matches
   if (caniuseResults.length > 0 || bcdResults.length > 0) {
