@@ -340,7 +340,6 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
       endIndex = Math.min(endIndex, versionSupport.findIndex(e => e.version === bcdSupport.version_removed) - 1);
     }
 
-    if (agent == 'edge') console.log(startIndex, endIndex);
     const supportChar = (bcdSupport.partial_implementation === true) ? 'a' : 'y';
     for (let i = startIndex; i <= endIndex; i++) {
       versionSupport[i].support = supportChar;
