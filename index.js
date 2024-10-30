@@ -368,12 +368,19 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
   }, {});
 }
 
-const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(entryKey, entryData, titlePrefix) {
+const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(bcdResult) {
+  const {
+    key,
+    origKey,
+    data,
+    prefix,
+  } = bcdResult;
+
   const toReturn = {
-    key: entryKey,
-    title: `${bcdTitleMap[titlePrefix] ?? `${titlePrefix}`}: ${entryData.description}`,
+    key,
+    title: `${bcdTitleMap[prefix] ?? `${prefix}`}: ${data.description ?? origKey}`,
     description: '',
-    spec: entryData.spec_url,
+    spec: data.spec_url,
     notes: '',
     notes_by_num: [],
     stats: {}, // To be filled on the next few lines …
@@ -382,7 +389,7 @@ const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(ent
   agents_bcd.forEach((agent_bcd, i) => {
     // Map BCD agent to CIU agent
     const agent_caniuse = agents[i];
-    toReturn.stats[agent_caniuse] = convertBCDSupportToCanIUseStat(agent_caniuse, entryData.support[agent_bcd]);
+    toReturn.stats[agent_caniuse] = convertBCDSupportToCanIUseStat(agent_caniuse, data.support[agent_bcd]);
   });
 
   return toReturn;
@@ -420,6 +427,7 @@ const findResult = function findResult(name) {
             if (entryKey === name || entry['__compat'].description?.includes(name)) {
               bcdResults.push({
                 key: `mdn-${section}_${subsectionKey}_${entryKey}`,
+                origKey: entryKey,
                 data: subEntry,
                 prefix: `${section}.${subsectionKey}`,
               });
@@ -428,6 +436,7 @@ const findResult = function findResult(name) {
             if (subEntryKey === name || subEntry['__compat']?.description?.includes(name)) {
               bcdResults.push({
                 key: `mdn-${section}_${subsectionKey}_${entryKey}_${subEntryKey}`,
+                origKey: subEntryKey,
                 data: subEntry['__compat'],
                 prefix: `${section}.${subsectionKey}`,
               });
@@ -437,7 +446,7 @@ const findResult = function findResult(name) {
       }
     }
   }
-  bcdResults = bcdResults.map(bcdResult => convertBCDEntryToCanIUseEntry(bcdResult.key, bcdResult.data, bcdResult.prefix));
+  bcdResults = bcdResults.map(bcdResult => convertBCDEntryToCanIUseEntry(bcdResult));
 
   // return array of matches
   if (caniuseResults.length > 0 || bcdResults.length > 0) {
