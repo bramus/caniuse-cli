@@ -303,6 +303,22 @@ const parseKeywords = function parseKeywords(keywords) {
   return parsedKeywords;
 };
 
+/**
+ * findVersionIndex() locates a BCD version within caniuse’s version list.
+ * BCD sometimes stores a bare major version (e.g. "18") where caniuse uses a
+ * dotted version (e.g. "18.0"), so fall back to a major-version match when the
+ * exact string isn’t found.
+ */
+const findVersionIndex = function findVersionIndex(versionSupport, bcdVersion) {
+  const exactIndex = versionSupport.findIndex((e) => e.version === bcdVersion);
+  if (exactIndex > -1) {
+    return exactIndex;
+  }
+
+  const bcdMajor = String(bcdVersion).split('.')[0];
+  return versionSupport.findIndex((e) => String(e.version).split('.')[0] === bcdMajor);
+};
+
 const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(agent, bcdSupport) {
   let versionSupport = [];
 
@@ -337,7 +353,7 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
     if (bcdSupport.version_added) {
       // Fix for https://github.com/bramus/caniuse-cli/issues/2
       // When the version is not found in the list of released versions, color nothing
-      const matchedIndex = versionSupport.findIndex(e => e.version === bcdSupport.version_added);
+      const matchedIndex = findVersionIndex(versionSupport, bcdSupport.version_added);
       if (matchedIndex > -1) {
         startIndex = Math.max(startIndex, matchedIndex);
       } else {
@@ -345,7 +361,7 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
       }
     }
     if (bcdSupport.version_removed) {
-      endIndex = Math.min(endIndex, versionSupport.findIndex(e => e.version === bcdSupport.version_removed) - 1);
+      endIndex = Math.min(endIndex, findVersionIndex(versionSupport, bcdSupport.version_removed) - 1);
     }
 
     const supportChar = (bcdSupport.partial_implementation === true) ? 'a' : 'y';
