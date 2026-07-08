@@ -305,17 +305,25 @@ const parseKeywords = function parseKeywords(keywords) {
 
 /**
  * findVersionIndex() locates a BCD version within caniuse’s version list.
- * BCD sometimes stores a bare major version (e.g. "18") where caniuse uses a
- * dotted version (e.g. "18.0"), so fall back to a major-version match when the
- * exact string isn’t found.
+ *
+ * Two BCD quirks are handled here:
+ *  - BCD sometimes stores a bare major version (e.g. "18") where caniuse uses a
+ *    dotted version (e.g. "18.0"), so we fall back to a major-version match when
+ *    the exact string isn’t found.
+ *  - BCD expresses “supported in this version or earlier” as a “≤”-prefixed
+ *    range (e.g. "≤37"). We strip the prefix and treat it as that version, the
+ *    earliest release we can positively mark as supported.
  */
 const findVersionIndex = function findVersionIndex(versionSupport, bcdVersion) {
-  const exactIndex = versionSupport.findIndex((e) => e.version === bcdVersion);
+  // Normalise BCD “≤X” ranged versions (e.g. "≤37") down to the bare version.
+  const normalizedVersion = String(bcdVersion).replace(/^≤/, '');
+
+  const exactIndex = versionSupport.findIndex((e) => e.version === normalizedVersion);
   if (exactIndex > -1) {
     return exactIndex;
   }
 
-  const bcdMajor = String(bcdVersion).split('.')[0];
+  const bcdMajor = normalizedVersion.split('.')[0];
   return versionSupport.findIndex((e) => String(e.version).split('.')[0] === bcdMajor);
 };
 
