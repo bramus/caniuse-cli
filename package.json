@@ -12,13 +12,14 @@
     "interop"
   ],
   "main": "index.js",
+  "type": "module",
   "bin": {
     "caniuse": "./index.js"
   },
   "scripts": {
     "update-data": "npm update --save caniuse-db @mdn/browser-compat-data && git add package.json && git commit -m \"Update caniuse-db and/or BCD\"",
-    "lint": "eslint index.js",
-    "lintfix": "eslint --fix index.js",
+    "lint": "eslint index.js src/ tests/",
+    "lintfix": "eslint --fix index.js src/ tests/",
     "tests": "node --test tests/*.test.js",
     "test": "npm run tests",
     "prepublishOnly": "npm run tests"
@@ -28,18 +29,12 @@
   "dependencies": {
     "@mdn/browser-compat-data": "^8.0.5",
     "caniuse-db": "^1.0.30001803",
-    "cli-color": "^1.4.0",
-    "omelette": "^0.4.17",
-    "wordwrap": "^1.0.0"
+    "omelette": "^0.4.17"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
-    "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.30.0",
-    "eslint-plugin-jsx-a11y": "^6.10.0",
-    "eslint-plugin-react": "^7.35.2",
-    "eslint-plugin-react-hooks": "^4.6.2"
+    "eslint-plugin-import": "^2.30.0"
   },
   "repository": {
     "type": "git",

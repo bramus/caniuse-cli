@@ -1,12 +1,12 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
-const path = require('node:path');
-const caniuse = require('caniuse-db/fulldata-json/data-2.0.json');
-const bcd = require('@mdn/browser-compat-data');
-
-const {
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { caniuse, bcd } from '../src/data.js';
+import {
   padCenter,
+  createWordWrap,
   prepStats,
   parseKeywords,
   parseVersion,
@@ -17,15 +17,24 @@ const {
   getCommandName,
   detectPackageManager,
   checkDatabaseAge,
-} = require('../index.js');
+} from '../index.js';
 
-const cliPath = path.join(__dirname, '..', 'index.js');
+const testsDir = path.dirname(fileURLToPath(import.meta.url));
+const cliPath = path.join(testsDir, '..', 'index.js');
 
-describe('String & keyword helpers', () => {
+describe('String, wrapping & keyword helpers', () => {
   it('padCenter() pads strings evenly on both sides', () => {
     assert.equal(padCenter('Chrome', 10, ' '), '  Chrome  ');
     assert.equal(padCenter('Edge', 10, ' '), '   Edge   ');
     assert.equal(padCenter('Safari', 6, ' '), 'Safari');
+  });
+
+  it('createWordWrap() wraps text in soft and hard modes', () => {
+    const softWrap = createWordWrap(0, 20);
+    assert.equal(softWrap('Hello world from caniuse cli'), 'Hello world from\ncaniuse cli');
+
+    const hardWrap = createWordWrap(4, 20, { mode: 'hard' });
+    assert.equal(hardWrap('[1] Short note text here'), '    [1] Short note\n    text here');
   });
 
   it('parseKeywords() splits comma-separated keywords and hyphenates spaces', () => {
@@ -208,13 +217,11 @@ describe('Environment & self-update helpers', () => {
     console.log = (...args) => logs.push(args.join(' '));
 
     try {
-      // Fresh timestamps (now)
       caniuse.updated = Math.floor(Date.now() / 1000);
       bcd.__meta.timestamp = new Date().toISOString();
       checkDatabaseAge();
       assert.equal(logs.length, 0);
 
-      // 45 days old
       caniuse.updated = Math.floor((Date.now() - 45 * 86400 * 1000) / 1000);
       checkDatabaseAge();
       assert.ok(logs.some((line) => line.includes('45 days old')));
