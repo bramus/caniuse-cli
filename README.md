@@ -13,6 +13,7 @@ Command line tool for [“Can I Use …”](https://caniuse.com/) and [MDN Brows
 * Collapses versions with the same level of support in the table, just like the [“Can I Use …” website](https://caniuse.com/).
 * Shows notes by number.
 * Supports tab autocompletion in **zsh**, **bash** and **fish**.
+* Built-in `--update` command to keep the local compatibility databases up to date.
 
 ## Installation
 
@@ -26,6 +27,14 @@ Command line tool for [“Can I Use …”](https://caniuse.com/) and [MDN Brows
 $ caniuse viewport-units
 $ caniuse "viewport units"
 $ caniuse @property
+```
+
+## Updating the Compatibility Data
+
+When your local `caniuse-db` or `@mdn/browser-compat-data` data is 30 days or older, `caniuse` will display a reminder to update. You can update the local databases at any time by running:
+
+```bash
+$ caniuse --update
 ```
 
 ## Enable Tab Autocompletion
