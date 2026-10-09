@@ -536,9 +536,6 @@ const firstArgument = ({ reply }) => {
   reply([].concat(dataKeys, otherKeys));
 };
 
-// initialize omelette tab completion
-omelette`caniuse ${firstArgument}`.init();
-
 // inject key for each item in data object
 Object.keys(caniuse.data).forEach((key) => {
   caniuse.data[key].key = key;
@@ -658,22 +655,43 @@ const checkDatabaseAge = function checkDatabaseAge() {
   }
 };
 
-// find and display result
-const name = process.argv[2];
-if (name) {
-  if (name === '--update') {
-    updateDatabases();
-  } else {
-    const res = findResult(name.toLowerCase());
+if (require.main === module) {
+  // initialize omelette tab completion
+  omelette`caniuse ${firstArgument}`.init();
 
-    if (res !== undefined) {
-      res.forEach((item) => printItem(item));
+  // find and display result
+  const name = process.argv[2];
+  if (name) {
+    if (name === '--update') {
+      updateDatabases();
     } else {
-      console.log('Nothing was found');
-    }
+      const res = findResult(name.toLowerCase());
 
-    checkDatabaseAge();
+      if (res !== undefined) {
+        res.forEach((item) => printItem(item));
+      } else {
+        console.log('Nothing was found');
+      }
+
+      checkDatabaseAge();
+    }
+  } else {
+    console.log(`Please pass in an argument, e.g. \`${getCommandName()} viewport-units\``);
   }
-} else {
-  console.log(`Please pass in an argument, e.g. \`${getCommandName()} viewport-units\``)
 }
+
+module.exports = {
+  getCurrentAgentVersion,
+  padCenter,
+  prepStats,
+  parseKeywords,
+  parseVersion,
+  compareVersions,
+  findVersionIndex,
+  convertBCDSupportToCanIUseStat,
+  convertBCDEntryToCanIUseEntry,
+  findResult,
+  getCommandName,
+  detectPackageManager,
+  checkDatabaseAge,
+};
