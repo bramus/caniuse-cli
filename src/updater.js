@@ -12,7 +12,7 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
  */
 export const getCommandName = function getCommandName() {
   if (process.env.npm_lifecycle_event === 'npx' || process.env.npm_command === 'exec') {
-    return 'npx caniuse';
+    return 'npx @bramus/caniuse-cli';
   }
   return 'caniuse';
 };

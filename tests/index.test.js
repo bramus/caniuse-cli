@@ -165,7 +165,7 @@ describe('prepStats() & findResult()', () => {
 });
 
 describe('Environment & self-update helpers', () => {
-  it('getCommandName() returns "npx caniuse" when invoked via npx and "caniuse" otherwise', () => {
+  it('getCommandName() returns "npx @bramus/caniuse-cli" when invoked via npx and "caniuse" otherwise', () => {
     const origLifecycle = process.env.npm_lifecycle_event;
     const origCommand = process.env.npm_command;
 
@@ -175,11 +175,11 @@ describe('Environment & self-update helpers', () => {
       assert.equal(getCommandName(), 'caniuse');
 
       process.env.npm_lifecycle_event = 'npx';
-      assert.equal(getCommandName(), 'npx caniuse');
+      assert.equal(getCommandName(), 'npx @bramus/caniuse-cli');
 
       delete process.env.npm_lifecycle_event;
       process.env.npm_command = 'exec';
-      assert.equal(getCommandName(), 'npx caniuse');
+      assert.equal(getCommandName(), 'npx @bramus/caniuse-cli');
     } finally {
       if (origLifecycle === undefined) delete process.env.npm_lifecycle_event;
       else process.env.npm_lifecycle_event = origLifecycle;
