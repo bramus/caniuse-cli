@@ -303,6 +303,30 @@ const parseKeywords = function parseKeywords(keywords) {
   return parsedKeywords;
 };
 
+/**
+ * findVersionIndex() locates a BCD version within caniuse’s version list.
+ *
+ * Two BCD quirks are handled here:
+ *  - BCD sometimes stores a bare major version (e.g. "18") where caniuse uses a
+ *    dotted version (e.g. "18.0"), so we fall back to a major-version match when
+ *    the exact string isn’t found.
+ *  - BCD expresses “supported in this version or earlier” as a “≤”-prefixed
+ *    range (e.g. "≤37"). We strip the prefix and treat it as that version, the
+ *    earliest release we can positively mark as supported.
+ */
+const findVersionIndex = function findVersionIndex(versionSupport, bcdVersion) {
+  // Normalise BCD “≤X” ranged versions (e.g. "≤37") down to the bare version.
+  const normalizedVersion = String(bcdVersion).replace(/^≤/, '');
+
+  const exactIndex = versionSupport.findIndex((e) => e.version === normalizedVersion);
+  if (exactIndex > -1) {
+    return exactIndex;
+  }
+
+  const bcdMajor = normalizedVersion.split('.')[0];
+  return versionSupport.findIndex((e) => String(e.version).split('.')[0] === bcdMajor);
+};
+
 const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(agent, bcdSupport) {
   let versionSupport = [];
 
@@ -337,7 +361,7 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
     if (bcdSupport.version_added) {
       // Fix for https://github.com/bramus/caniuse-cli/issues/2
       // When the version is not found in the list of released versions, color nothing
-      const matchedIndex = versionSupport.findIndex(e => e.version === bcdSupport.version_added);
+      const matchedIndex = findVersionIndex(versionSupport, bcdSupport.version_added);
       if (matchedIndex > -1) {
         startIndex = Math.max(startIndex, matchedIndex);
       } else {
@@ -345,7 +369,7 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
       }
     }
     if (bcdSupport.version_removed) {
-      endIndex = Math.min(endIndex, versionSupport.findIndex(e => e.version === bcdSupport.version_removed) - 1);
+      endIndex = Math.min(endIndex, findVersionIndex(versionSupport, bcdSupport.version_removed) - 1);
     }
 
     const supportChar = (bcdSupport.partial_implementation === true) ? 'a' : 'y';
