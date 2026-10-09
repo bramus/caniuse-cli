@@ -14,7 +14,7 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "caniuse": "./index.js"
+    "caniuse": "index.js"
   },
   "scripts": {
     "update-data": "npm update --save caniuse-db @mdn/browser-compat-data web-features && git add package.json && git commit -m \"Update caniuse-db, BCD, and/or web-features\"",
@@ -39,6 +39,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bramus/caniuse-cli.git"
+    "url": "git+https://github.com/bramus/caniuse-cli.git"
   }
 }
