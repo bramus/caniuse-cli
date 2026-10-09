@@ -304,27 +304,54 @@ const parseKeywords = function parseKeywords(keywords) {
 };
 
 /**
- * findVersionIndex() locates a BCD version within caniuse’s version list.
+ * parseVersion() parses a "major" or "major.minor" version string into a numeric [major, minor] tuple.
+ */
+const parseVersion = function parseVersion(versionStr) {
+  const [major, minor = 0] = String(versionStr).split('.').map(Number);
+  return [major, minor];
+};
+
+/**
+ * compareVersions() compares two version strings numerically.
+ */
+const compareVersions = function compareVersions(a, b) {
+  const [aMajor, aMinor] = parseVersion(a);
+  const [bMajor, bMinor] = parseVersion(b);
+  if (aMajor !== bMajor) {
+    return aMajor - bMajor;
+  }
+  return aMinor - bMinor;
+};
+
+/**
+ * findVersionIndex() locates a BCD version within caniuse’s chronological version list.
  *
- * Two BCD quirks are handled here:
- *  - BCD sometimes stores a bare major version (e.g. "18") where caniuse uses a
- *    dotted version (e.g. "18.0"), so we fall back to a major-version match when
- *    the exact string isn’t found.
+ * Handles several mismatches between BCD and caniuse-db:
  *  - BCD expresses “supported in this version or earlier” as a “≤”-prefixed
- *    range (e.g. "≤37"). We strip the prefix and treat it as that version, the
- *    earliest release we can positively mark as supported.
+ *    range (e.g. "≤37"). We strip the prefix and treat it as that version.
+ *  - BCD uses "preview" where caniuse uses "TP" (for Safari Technology Preview).
+ *  - BCD stores bare major versions (e.g. "18") or specific minor versions (e.g. "14.5")
+ *    where caniuse uses dotted versions ("18.0") or version ranges ("14.5-14.8").
+ *  - BCD may list versions older than the first version tracked by caniuse-db
+ *    (e.g. "1" when Chrome starts at "4", or "117" when Chrome for Android only tracks "154").
+ *    Finding the first caniuse entry whose upper bound is >= the BCD version maps these to index 0,
+ *    while still returning -1 for unreleased future versions.
  */
 const findVersionIndex = function findVersionIndex(versionSupport, bcdVersion) {
   // Normalise BCD “≤X” ranged versions (e.g. "≤37") down to the bare version.
   const normalizedVersion = String(bcdVersion).replace(/^≤/, '');
 
-  const exactIndex = versionSupport.findIndex((e) => e.version === normalizedVersion);
-  if (exactIndex > -1) {
-    return exactIndex;
+  if (normalizedVersion === 'preview') {
+    return versionSupport.findIndex((e) => e.version === 'TP');
   }
 
-  const bcdMajor = normalizedVersion.split('.')[0];
-  return versionSupport.findIndex((e) => String(e.version).split('.')[0] === bcdMajor);
+  return versionSupport.findIndex((e) => {
+    if (e.version === 'TP') {
+      return false;
+    }
+    const entryMaxVersion = String(e.version).split('-').pop();
+    return compareVersions(entryMaxVersion, normalizedVersion) >= 0;
+  });
 };
 
 const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(agent, bcdSupport) {
@@ -348,9 +375,10 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
       return;
     }
 
-    // When there are multiple updates, BCD stores it as an array
+    // When there are multiple updates, BCD stores it as an array (most recent / primary first).
+    // Process in reverse so newer/full support entries take precedence over older partial ones.
     if (Array.isArray(bcdSupport)) {
-      bcdSupport.forEach(subEntry => process(subEntry, versionSupport));
+      [...bcdSupport].reverse().forEach(subEntry => process(subEntry, versionSupport));
       return;
     }
   
@@ -369,7 +397,10 @@ const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUseStat(a
       }
     }
     if (bcdSupport.version_removed) {
-      endIndex = Math.min(endIndex, findVersionIndex(versionSupport, bcdSupport.version_removed) - 1);
+      const removedIndex = findVersionIndex(versionSupport, bcdSupport.version_removed);
+      if (removedIndex > -1) {
+        endIndex = Math.min(endIndex, removedIndex - 1);
+      }
     }
 
     const supportChar = (bcdSupport.partial_implementation === true) ? 'a' : 'y';
@@ -443,7 +474,7 @@ const findResult = function findResult(name) {
 
   // Check BCD
   let bcdResults = [];
-  for (const section of Object.keys(bcd).filter(k => !k.startsWith('__'))) { // css, js, html, …
+  for (const section of Object.keys(bcd).filter(k => !k.startsWith('__') && k !== 'browsers')) { // css, js, html, …
     for (const [subsectionKey, subsection] of Object.entries(bcd[section])) { // css: at-rules, properties, …
       for (const [entryKey, entry] of Object.entries(subsection)) { // properties: writing_mode, word-wrap, …
         for (const [subEntryKey, subEntry] of Object.entries(entry)) { // writing-mode: __compat, horizontal-tb, lr, lr-tb, …
@@ -456,7 +487,7 @@ const findResult = function findResult(name) {
                 prefix: `${section}.${subsectionKey}`,
               });
             }
-          } else {
+          } else if (subEntry?.__compat) {
             if (subEntryKey === name || subEntry['__compat']?.description?.includes(name)) {
               bcdResults.push({
                 key: `mdn-${section}_${subsectionKey}_${entryKey}_${subEntryKey}`,
