@@ -53,6 +53,7 @@ export const findBCDResults = function findBCDResults(name) {
             if (entryKey === name || entry.__compat.description?.includes(name)) {
               bcdResults.push({
                 key: `mdn-${section}_${subsectionKey}_${entryKey}`,
+                compatKey: `${section}.${subsectionKey}.${entryKey}`,
                 origKey: entryKey,
                 data: subEntry,
                 prefix: `${section}.${subsectionKey}`,
@@ -62,6 +63,7 @@ export const findBCDResults = function findBCDResults(name) {
             if (subEntryKey === name || subEntry.__compat?.description?.includes(name)) {
               bcdResults.push({
                 key: `mdn-${section}_${subsectionKey}_${entryKey}_${subEntryKey}`,
+                compatKey: `${section}.${subsectionKey}.${entryKey}.${subEntryKey}`,
                 origKey: subEntryKey,
                 data: subEntry.__compat,
                 prefix: `${section}.${subsectionKey}`,

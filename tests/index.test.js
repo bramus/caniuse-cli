@@ -8,6 +8,7 @@ import {
   padCenter,
   createWordWrap,
   prepStats,
+  formatBaselineStatus,
   parseKeywords,
   parseVersion,
   compareVersions,
@@ -156,11 +157,35 @@ describe('prepStats() & findResult()', () => {
   it('finds CanIUse and BCD results without crashing on metadata keys like "status"', () => {
     const viewportRes = findResult('viewport-units');
     assert.ok(Array.isArray(viewportRes) && viewportRes.length > 0);
+    assert.equal(viewportRes[0].baseline?.baseline, 'high');
+
+    const propertyRes = findResult('@property');
+    assert.ok(Array.isArray(propertyRes) && propertyRes.length > 0);
+    assert.ok(propertyRes[0].baseline !== undefined);
 
     const allowDiscreteRes = findResult('allow-discrete');
     assert.ok(Array.isArray(allowDiscreteRes) && allowDiscreteRes.length > 0);
 
     assert.doesNotThrow(() => findResult('status'));
+  });
+
+  it('formatBaselineStatus() formats widely, newly, and limited availability states', () => {
+    const highLine = formatBaselineStatus({
+      baseline: 'high',
+      baseline_high_date: '2020-04-17',
+    });
+    assert.match(highLine, /Baseline: Widely available across major browsers \(since 2020-04-17\)/);
+
+    const lowLine = formatBaselineStatus({
+      baseline: 'low',
+      baseline_low_date: '2024-07-09',
+    });
+    assert.match(lowLine, /Baseline 2024: Newly available across major browsers \(since 2024-07-09\)/);
+
+    const limitedLine = formatBaselineStatus({
+      baseline: false,
+    });
+    assert.match(limitedLine, /Baseline: Limited availability across major browsers/);
   });
 });
 

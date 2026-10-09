@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_DB_AGE_DAYS } from './constants.js';
@@ -47,21 +48,25 @@ export const fetchLatestVersion = async function fetchLatestVersion(pkgName) {
 };
 
 /**
- * updateDatabases() checks if caniuse-db or @mdn/browser-compat-data are outdated
- * and updates them in rootDir
+ * updateDatabases() checks if caniuse-db, @mdn/browser-compat-data, or web-features
+ * are outdated and updates them in rootDir
  */
 export const updateDatabases = async function updateDatabases() {
   console.log('Checking for database updates …');
 
   const caniuseVersionLocal = require('caniuse-db/package.json').version;
   const bcdVersionLocal = bcd.__meta.version;
+  const webFeaturesPkgUrl = new URL('./package.json', import.meta.resolve('web-features'));
+  const webFeaturesVersionLocal = JSON.parse(fs.readFileSync(webFeaturesPkgUrl, 'utf8')).version;
 
   let caniuseVersionRemote;
   let bcdVersionRemote;
+  let webFeaturesVersionRemote;
   try {
-    [caniuseVersionRemote, bcdVersionRemote] = await Promise.all([
+    [caniuseVersionRemote, bcdVersionRemote, webFeaturesVersionRemote] = await Promise.all([
       fetchLatestVersion('caniuse-db'),
       fetchLatestVersion('@mdn/browser-compat-data'),
+      fetchLatestVersion('web-features'),
     ]);
   } catch (error) {
     console.error(color.red(`Could not check for updates: ${error.message}`));
@@ -71,8 +76,9 @@ export const updateDatabases = async function updateDatabases() {
 
   const caniuseOutdated = caniuseVersionLocal !== caniuseVersionRemote;
   const bcdOutdated = bcdVersionLocal !== bcdVersionRemote;
+  const webFeaturesOutdated = webFeaturesVersionLocal !== webFeaturesVersionRemote;
 
-  if (!caniuseOutdated && !bcdOutdated) {
+  if (!caniuseOutdated && !bcdOutdated && !webFeaturesOutdated) {
     console.log(color.green('Databases are already up to date!'));
     return;
   }
@@ -85,6 +91,10 @@ export const updateDatabases = async function updateDatabases() {
   if (bcdOutdated) {
     console.log(`- @mdn/browser-compat-data: ${bcdVersionLocal} → ${color.green(bcdVersionRemote)}`);
     packagesToUpdate.push('@mdn/browser-compat-data@latest');
+  }
+  if (webFeaturesOutdated) {
+    console.log(`- web-features: ${webFeaturesVersionLocal} → ${color.green(webFeaturesVersionRemote)}`);
+    packagesToUpdate.push('web-features@latest');
   }
 
   const pm = detectPackageManager();

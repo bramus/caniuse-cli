@@ -9,7 +9,8 @@ Command line tool for [“Can I Use …”](https://caniuse.com/) and [MDN Brows
 
 ## Features
 
-* Instant, offline, results powered by [caniuse-db](https://github.com/Fyrd/caniuse) and [`@mdn/browser-compat-data`](https://github.com/mdn/browser-compat-data).
+* Instant, offline, results powered by [caniuse-db](https://github.com/Fyrd/caniuse), [`@mdn/browser-compat-data`](https://github.com/mdn/browser-compat-data), and [`web-features`](https://github.com/web-platform-dx/web-features).
+* Displays color-coded [Baseline](https://web.dev/baseline) status (Widely available, Newly available, or Limited availability).
 * Collapses versions with the same level of support in the table, just like the [“Can I Use …” website](https://caniuse.com/).
 * Shows notes by number.
 * Supports tab autocompletion in **zsh**, **bash** and **fish**.
@@ -31,7 +32,7 @@ $ caniuse @property
 
 ## Updating the Compatibility Data
 
-When your local `caniuse-db` or `@mdn/browser-compat-data` data is 30 days or older, `caniuse` will display a reminder to update. You can update the local databases at any time by running:
+When your local `caniuse-db` or `@mdn/browser-compat-data` data is 30 days or older, `caniuse` will display a reminder to update. You can update the local databases (`caniuse-db`, `@mdn/browser-compat-data`, and `web-features`) at any time by running:
 
 ```bash
 $ caniuse --update

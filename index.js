@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { initCompletion } from './src/completion.js';
-import { printItem, prepStats } from './src/printer.js';
+import { printItem, prepStats, formatBaselineStatus } from './src/printer.js';
 import { findResult, parseKeywords } from './src/search.js';
 import {
   getCommandName,
@@ -55,6 +55,7 @@ export {
   padCenter,
   createWordWrap,
   prepStats,
+  formatBaselineStatus,
   parseKeywords,
   parseVersion,
   compareVersions,

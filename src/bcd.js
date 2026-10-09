@@ -1,5 +1,5 @@
 import { AGENTS, AGENTS_BCD, BCD_TITLE_MAP } from './constants.js';
-import { caniuse } from './data.js';
+import { caniuse, bcdBaselineMap } from './data.js';
 import { findVersionIndex } from './utils/versions.js';
 
 /**
@@ -70,6 +70,7 @@ export const convertBCDSupportToCanIUseStat = function convertBCDSupportToCanIUs
 export const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEntry(bcdResult) {
   const {
     key,
+    compatKey,
     origKey,
     data,
     prefix,
@@ -81,7 +82,7 @@ export const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEn
     stats[agentCanIUse] = convertBCDSupportToCanIUseStat(agentCanIUse, data.support[agentBcd]);
   });
 
-  return {
+  const entry = {
     key,
     title: `${BCD_TITLE_MAP[prefix] ?? prefix}: ${data.description ?? origKey}`,
     description: '',
@@ -90,4 +91,11 @@ export const convertBCDEntryToCanIUseEntry = function convertBCDEntryToCanIUseEn
     notes_by_num: [],
     stats,
   };
+
+  const baseline = compatKey ? bcdBaselineMap.get(compatKey) : undefined;
+  if (baseline) {
+    entry.baseline = baseline;
+  }
+
+  return entry;
 };

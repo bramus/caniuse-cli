@@ -17,7 +17,7 @@
     "caniuse": "./index.js"
   },
   "scripts": {
-    "update-data": "npm update --save caniuse-db @mdn/browser-compat-data && git add package.json && git commit -m \"Update caniuse-db and/or BCD\"",
+    "update-data": "npm update --save caniuse-db @mdn/browser-compat-data web-features && git add package.json && git commit -m \"Update caniuse-db, BCD, and/or web-features\"",
     "lint": "eslint index.js src/ tests/",
     "lintfix": "eslint --fix index.js src/ tests/",
     "tests": "node --test tests/*.test.js",
@@ -29,7 +29,8 @@
   "dependencies": {
     "@mdn/browser-compat-data": "^8.0.5",
     "caniuse-db": "^1.0.30001803",
-    "omelette": "^0.4.17"
+    "omelette": "^0.4.17",
+    "web-features": "^3.42.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

@@ -191,6 +191,33 @@ export const prepStats = function prepStats(stats) {
 };
 
 /**
+ * formatBaselineStatus() formats a web-features status object with Baseline color coding:
+ *  - green = widely available (high)
+ *  - blue = newly available (low)
+ *  - orange = limited availability (false)
+ */
+export const formatBaselineStatus = function formatBaselineStatus(status) {
+  if (!status || status.baseline === undefined) {
+    return null;
+  }
+
+  if (status.baseline === 'high') {
+    const sinceDate = status.baseline_high_date || status.baseline_low_date;
+    const sinceSuffix = sinceDate ? ` (since ${sinceDate})` : '';
+    return color.green(`Baseline: Widely available across major browsers${sinceSuffix}`);
+  }
+
+  if (status.baseline === 'low') {
+    const lowDate = status.baseline_low_date;
+    const year = lowDate ? ` ${lowDate.replace(/^≤/, '').slice(0, 4)}` : '';
+    const sinceSuffix = lowDate ? ` (since ${lowDate})` : '';
+    return color.blue(`Baseline${year}: Newly available across major browsers${sinceSuffix}`);
+  }
+
+  return color.orange('Baseline: Limited availability across major browsers');
+};
+
+/**
  * printItem() prints `caniuse` results for a specified feature item
  */
 export const printItem = function printItem(item) {
@@ -204,6 +231,12 @@ export const printItem = function printItem(item) {
   const formattedTitle = (item.title ?? '(?)').replaceAll('<code>', '`').replaceAll('</code>', '`');
   console.log(color.bold(wrap(formattedTitle)));
   console.log(color.underline(`https://caniuse.com/#feat=${item.key}`));
+  if (item.baseline) {
+    const baselineLine = formatBaselineStatus(item.baseline);
+    if (baselineLine) {
+      console.log(baselineLine);
+    }
+  }
   console.log();
 
   if (item.description) {
