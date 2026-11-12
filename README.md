@@ -19,7 +19,7 @@ Command line tool for [“Can I Use …”](https://caniuse.com/) and [MDN Brows
 ## Installation
 
 ```
-# npm install -g @bramus/caniuse-cli
+$ npm install -g @bramus/caniuse-cli
 ```
 
 ## Usage
@@ -30,6 +30,8 @@ $ caniuse "viewport units"
 $ caniuse @property
 $ caniuse --help
 ```
+
+You can also run `@bramus/caniuse-cli` directly using `npx`: `npx @bramus/caniuse-cli`
 
 ## Updating the Compatibility Data
 
