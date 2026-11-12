@@ -39,6 +39,60 @@ describe('String, wrapping & keyword helpers', () => {
     assert.equal(hardWrap('[1] Short note text here'), '    [1] Short note\n    text here');
   });
 
+  it('createWordWrap({ linkify: true }) formats Markdown and bare URLs as OSC 8 hyperlinks', () => {
+    const origForceColor = process.env.FORCE_COLOR;
+    const origNoColor = process.env.NO_COLOR;
+    delete process.env.NO_COLOR;
+    process.env.FORCE_COLOR = '1';
+
+    try {
+      const linkWrap = createWordWrap(4, 76, { mode: 'hard', linkify: true });
+
+      // Markdown link renders clickable label (without breaking on the long URL)
+      const mdOut = linkWrap(
+        '[5] Broken support when scrolling. Related [to a bug](https://bugs.webkit.org/show_bug.cgi?id=219324).'
+      );
+      assert.ok(mdOut.includes('\x1b]8;;https://bugs.webkit.org/show_bug.cgi?id=219324\x07'));
+      assert.ok(mdOut.includes('to a bug'));
+      assert.ok(!mdOut.includes('\n'));
+
+      // Bare URL renders clickable origin without swallowing trailing ')'
+      const bareOut = linkWrap(
+        '[1] Issue details (See: https://colloq.io/blog/safaris-detailssummary-rem-font-size-issue)'
+      );
+      assert.ok(bareOut.includes('\x1b]8;;https://colloq.io/blog/safaris-detailssummary-rem-font-size-issue\x07'));
+      assert.ok(bareOut.includes('https://colloq.io'));
+      assert.ok(bareOut.endsWith('\x1b]8;;\x07)'));
+
+      // Relative caniuse links resolve against https://caniuse.com/
+      const relOut = linkWrap('See [WebAssembly](/wasm) support.');
+      assert.ok(relOut.includes('\x1b]8;;https://caniuse.com/wasm\x07'));
+
+      // URLs inside inline code backticks stay untouched
+      const codeOut = linkWrap('Use `<link href="https://example.com/foo">` in HTML.');
+      assert.ok(!codeOut.includes('\x1b]8;'));
+      assert.ok(codeOut.includes('`<link href="https://example.com/foo">`'));
+
+      // Multi-line wrapped link labels close/reopen OSC 8 per line with shared id
+      const narrowWrap = createWordWrap(4, 28, { mode: 'hard', linkify: true });
+      const multiOut = narrowWrap('Install [AV1 Video Extension](https://www.microsoft.com/store/productId/9MVZQVXJBQ9V)');
+      const lines = multiOut.split('\n');
+      assert.ok(lines.length > 1);
+      lines.forEach((line) => {
+        const opens = line.split(';https://www.microsoft.com/store/productId/9MVZQVXJBQ9V\x07').length - 1;
+        const closes = line.split('\x1b]8;;\x07').length - 1;
+        assert.equal(opens, 1);
+        assert.equal(closes, 1);
+      });
+    } finally {
+      if (origForceColor === undefined) delete process.env.FORCE_COLOR;
+      else process.env.FORCE_COLOR = origForceColor;
+
+      if (origNoColor === undefined) delete process.env.NO_COLOR;
+      else process.env.NO_COLOR = origNoColor;
+    }
+  });
+
   it('parseKeywords() splits comma-separated keywords and hyphenates spaces', () => {
     assert.deepEqual(
       parseKeywords('css, viewport units,  grid layout , '),

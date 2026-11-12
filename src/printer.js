@@ -5,6 +5,7 @@ import {
   padCenter,
   wrap,
   wrapNote,
+  formatHyperlink,
   color,
 } from './utils/text.js';
 import { getCurrentAgentVersion } from './utils/versions.js';
@@ -230,8 +231,9 @@ export const printItem = function printItem(item) {
   } = prepStats(item.stats);
 
   const formattedTitle = (item.title ?? '(?)').replaceAll('<code>', '`').replaceAll('</code>', '`');
+  const featureUrl = `https://caniuse.com/#feat=${item.key}`;
   console.log(color.bold(wrap(formattedTitle)));
-  console.log(color.underline(`https://caniuse.com/#feat=${item.key}`));
+  console.log(formatHyperlink(featureUrl, featureUrl));
   if (item.baseline) {
     const baselineLine = formatBaselineStatus(item.baseline);
     if (baselineLine) {

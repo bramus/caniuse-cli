@@ -19,7 +19,7 @@ import {
   updateDatabases,
   checkDatabaseAge,
 } from './src/updater.js';
-import { padCenter, createWordWrap } from './src/utils/text.js';
+import { padCenter, createWordWrap, formatHyperlink } from './src/utils/text.js';
 import {
   getCurrentAgentVersion,
   parseVersion,
@@ -70,6 +70,7 @@ export {
   getDatabaseVersions,
   padCenter,
   createWordWrap,
+  formatHyperlink,
   prepStats,
   formatBaselineStatus,
   printHelp,
