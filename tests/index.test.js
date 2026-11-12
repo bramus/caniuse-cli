@@ -18,6 +18,7 @@ import {
   getCommandName,
   detectPackageManager,
   checkDatabaseAge,
+  getCliVersion,
 } from '../index.js';
 
 const testsDir = path.dirname(fileURLToPath(import.meta.url));
@@ -270,10 +271,29 @@ describe('CLI integration', () => {
     assert.match(out, /Usage:/);
     assert.match(out, /Options:/);
     assert.match(out, /--help/);
+    assert.match(out, /--version/);
+    assert.match(out, /--versions/);
     assert.match(out, /--update/);
     assert.match(out, /--completion/);
     assert.match(out, /--completion-fish/);
     assert.match(out, /Examples:/);
+  });
+
+  it('prints only the binary version number when invoked with --version or -v', () => {
+    const outLong = execFileSync(process.execPath, [cliPath, '--version'], { encoding: 'utf8' });
+    assert.equal(outLong, `${getCliVersion()}\n`);
+    assert.match(outLong, /^\d+\.\d+\.\d+(-[\w.]+)?\n$/);
+
+    const outShort = execFileSync(process.execPath, [cliPath, '-v'], { encoding: 'utf8' });
+    assert.equal(outShort, outLong);
+  });
+
+  it('prints database versions when invoked with --versions', () => {
+    const out = execFileSync(process.execPath, [cliPath, '--versions'], { encoding: 'utf8' });
+    assert.match(
+      out,
+      /^- @mdn\/browser-compat-data: \S+\n- caniuse-db: \S+\n- web-features: \S+\n$/
+    );
   });
 
   it('prints "Nothing was found" for nonexistent features', () => {

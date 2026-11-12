@@ -29,6 +29,8 @@ $ caniuse viewport-units
 $ caniuse "viewport units"
 $ caniuse @property
 $ caniuse --help
+$ caniuse --version
+$ caniuse --versions
 ```
 
 You can also run `@bramus/caniuse-cli` directly using `npx`: `npx @bramus/caniuse-cli`

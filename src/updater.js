@@ -1,9 +1,8 @@
 import { execSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_DB_AGE_DAYS } from './constants.js';
-import { caniuse, bcd, require } from './data.js';
+import { caniuse, bcd, getDatabaseVersions } from './data.js';
 import { color } from './utils/text.js';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -54,10 +53,11 @@ export const fetchLatestVersion = async function fetchLatestVersion(pkgName) {
 export const updateDatabases = async function updateDatabases() {
   console.log('Checking for database updates …');
 
-  const caniuseVersionLocal = require('caniuse-db/package.json').version;
-  const bcdVersionLocal = bcd.__meta.version;
-  const webFeaturesPkgUrl = new URL('./package.json', import.meta.resolve('web-features'));
-  const webFeaturesVersionLocal = JSON.parse(fs.readFileSync(webFeaturesPkgUrl, 'utf8')).version;
+  const {
+    caniuse: caniuseVersionLocal,
+    bcd: bcdVersionLocal,
+    webFeatures: webFeaturesVersionLocal,
+  } = getDatabaseVersions();
 
   let caniuseVersionRemote;
   let bcdVersionRemote;

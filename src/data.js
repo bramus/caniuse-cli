@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { features as webFeatures } from 'web-features';
 
@@ -31,11 +32,32 @@ Object.keys(caniuse.data).forEach((key) => {
   }
 });
 
+/**
+ * getCliVersion() returns the version of the installed CLI binary
+ */
+const getCliVersion = function getCliVersion() {
+  return require('../package.json').version;
+};
+
+/**
+ * getDatabaseVersions() returns the installed versions of BCD, caniuse-db, and web-features
+ */
+const getDatabaseVersions = function getDatabaseVersions() {
+  const webFeaturesPkgUrl = new URL('./package.json', import.meta.resolve('web-features'));
+  return {
+    bcd: bcd.__meta.version,
+    caniuse: require('caniuse-db/package.json').version,
+    webFeatures: JSON.parse(fs.readFileSync(webFeaturesPkgUrl, 'utf8')).version,
+  };
+};
+
 export {
   caniuse,
   bcd,
   webFeatures,
   caniuseBaselineMap,
   bcdBaselineMap,
+  getCliVersion,
+  getDatabaseVersions,
   require,
 };

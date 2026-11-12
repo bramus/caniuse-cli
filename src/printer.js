@@ -1,5 +1,5 @@
 import { AGENTS, DEFAULT_ITEM_WIDTH } from './constants.js';
-import { caniuse } from './data.js';
+import { caniuse, getCliVersion, getDatabaseVersions } from './data.js';
 import { getCommandName } from './updater.js';
 import {
   padCenter,
@@ -269,6 +269,24 @@ export const printItem = function printItem(item) {
 };
 
 /**
+ * printVersion() prints the version of the installed CLI binary
+ */
+export const printVersion = function printVersion() {
+  console.log(getCliVersion());
+};
+
+/**
+ * printVersions() prints the versions of the local compatibility databases
+ */
+export const printVersions = function printVersions() {
+  const { bcd, caniuse: caniuseVersion, webFeatures } = getDatabaseVersions();
+
+  console.log(`- @mdn/browser-compat-data: ${bcd}`);
+  console.log(`- caniuse-db: ${caniuseVersion}`);
+  console.log(`- web-features: ${webFeatures}`);
+};
+
+/**
  * printHelp() prints CLI usage instructions, available options, and examples
  */
 export const printHelp = function printHelp() {
@@ -282,6 +300,8 @@ export const printHelp = function printHelp() {
   console.log();
   console.log(color.bold('Options:'));
   console.log('  --help              Print this help message');
+  console.log('  --version           Print CLI version');
+  console.log('  --versions          Print local compatibility database versions');
   console.log('  --update            Update local compatibility databases');
   console.log('  --completion        Print shell tab completion script for bash and zsh');
   console.log('  --completion-fish   Print shell tab completion script for fish');

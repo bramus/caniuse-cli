@@ -6,9 +6,12 @@ import { initCompletion } from './src/completion.js';
 import {
   printItem,
   printHelp,
+  printVersion,
+  printVersions,
   prepStats,
   formatBaselineStatus,
 } from './src/printer.js';
+import { getCliVersion, getDatabaseVersions } from './src/data.js';
 import { findResult, parseKeywords } from './src/search.js';
 import {
   getCommandName,
@@ -39,6 +42,10 @@ if (isDirectRun) {
   if (name) {
     if (name === '--help' || name === '-h') {
       printHelp();
+    } else if (name === '--version' || name === '-v') {
+      printVersion();
+    } else if (name === '--versions') {
+      printVersions();
     } else if (name === '--update') {
       updateDatabases();
     } else {
@@ -59,11 +66,15 @@ if (isDirectRun) {
 
 export {
   getCurrentAgentVersion,
+  getCliVersion,
+  getDatabaseVersions,
   padCenter,
   createWordWrap,
   prepStats,
   formatBaselineStatus,
   printHelp,
+  printVersion,
+  printVersions,
   parseKeywords,
   parseVersion,
   compareVersions,
