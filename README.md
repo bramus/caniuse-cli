@@ -35,6 +35,15 @@ $ caniuse --versions
 
 You can also run `@bramus/caniuse-cli` directly using `npx`: `npx @bramus/caniuse-cli`
 
+### Options
+
+* `--help` (`-h`): Print the help message and usage instructions.
+* `--version` (`-v`): Print the version number of the installed `@bramus/caniuse-cli` binary.
+* `--versions`: Print the versions of the local compatibility databases (`@mdn/browser-compat-data`, `caniuse-db`, and `web-features`).
+* `--update`: Update the local compatibility databases.
+* `--completion`: Print the shell tab completion script for **bash** and **zsh**.
+* `--completion-fish`: Print the shell tab completion script for **fish**.
+
 ## Updating the Compatibility Data
 
 When your local `caniuse-db` or `@mdn/browser-compat-data` data is 30 days or older, `caniuse` will display a reminder to update. You can update the local databases (`caniuse-db`, `@mdn/browser-compat-data`, and `web-features`) at any time by running:
@@ -42,6 +51,8 @@ When your local `caniuse-db` or `@mdn/browser-compat-data` data is 30 days or ol
 ```bash
 $ caniuse --update
 ```
+
+To check which database versions are currently installed, run `caniuse --versions`.
 
 ## Enable Tab Autocompletion
 
