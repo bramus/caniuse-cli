@@ -3,7 +3,12 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { initCompletion } from './src/completion.js';
-import { printItem, prepStats, formatBaselineStatus } from './src/printer.js';
+import {
+  printItem,
+  printHelp,
+  prepStats,
+  formatBaselineStatus,
+} from './src/printer.js';
 import { findResult, parseKeywords } from './src/search.js';
 import {
   getCommandName,
@@ -32,7 +37,9 @@ if (isDirectRun) {
 
   const name = process.argv[2];
   if (name) {
-    if (name === '--update') {
+    if (name === '--help' || name === '-h') {
+      printHelp();
+    } else if (name === '--update') {
       updateDatabases();
     } else {
       const res = findResult(name.toLowerCase());
@@ -46,7 +53,7 @@ if (isDirectRun) {
       checkDatabaseAge();
     }
   } else {
-    console.log(`Please pass in an argument, e.g. \`${getCommandName()} viewport-units\``);
+    console.log(`Please pass in an argument, e.g. \`${getCommandName()} viewport-units\`, or pass \`--help\` to print out help.`);
   }
 }
 
@@ -56,6 +63,7 @@ export {
   createWordWrap,
   prepStats,
   formatBaselineStatus,
+  printHelp,
   parseKeywords,
   parseVersion,
   compareVersions,

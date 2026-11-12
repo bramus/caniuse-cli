@@ -262,6 +262,18 @@ describe('CLI integration', () => {
   it('prints usage instructions when invoked with no arguments', () => {
     const out = execFileSync(process.execPath, [cliPath], { encoding: 'utf8' });
     assert.match(out, /Please pass in an argument/);
+    assert.match(out, /--help/);
+  });
+
+  it('prints help output when invoked with --help', () => {
+    const out = execFileSync(process.execPath, [cliPath, '--help'], { encoding: 'utf8' });
+    assert.match(out, /Usage:/);
+    assert.match(out, /Options:/);
+    assert.match(out, /--help/);
+    assert.match(out, /--update/);
+    assert.match(out, /--completion/);
+    assert.match(out, /--completion-fish/);
+    assert.match(out, /Examples:/);
   });
 
   it('prints "Nothing was found" for nonexistent features', () => {

@@ -28,6 +28,7 @@ Command line tool for [“Can I Use …”](https://caniuse.com/) and [MDN Brows
 $ caniuse viewport-units
 $ caniuse "viewport units"
 $ caniuse @property
+$ caniuse --help
 ```
 
 ## Updating the Compatibility Data

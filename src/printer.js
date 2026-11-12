@@ -1,5 +1,6 @@
 import { AGENTS, DEFAULT_ITEM_WIDTH } from './constants.js';
 import { caniuse } from './data.js';
+import { getCommandName } from './updater.js';
 import {
   padCenter,
   wrap,
@@ -265,4 +266,29 @@ export const printItem = function printItem(item) {
   }
 
   console.log();
+};
+
+/**
+ * printHelp() prints CLI usage instructions, available options, and examples
+ */
+export const printHelp = function printHelp() {
+  const cmd = getCommandName();
+
+  console.log(color.bold('Command line tool for “Can I Use…” and MDN Browser Compat Data'));
+  console.log();
+  console.log(color.bold('Usage:'));
+  console.log(`  ${cmd} <feature>`);
+  console.log(`  ${cmd} [options]`);
+  console.log();
+  console.log(color.bold('Options:'));
+  console.log('  --help              Print this help message');
+  console.log('  --update            Update local compatibility databases');
+  console.log('  --completion        Print shell tab completion script for bash and zsh');
+  console.log('  --completion-fish   Print shell tab completion script for fish');
+  console.log();
+  console.log(color.bold('Examples:'));
+  console.log(`  ${cmd} viewport-units`);
+  console.log(`  ${cmd} "viewport units"`);
+  console.log(`  ${cmd} @property`);
+  console.log(`  ${cmd} --update`);
 };
